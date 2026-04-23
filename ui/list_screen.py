@@ -1,9 +1,14 @@
 # ui/list_screen.py
 
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout,
-    QTableWidget, QTableWidgetItem,
-    QPushButton, QLabel, QComboBox
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QTableWidget,
+    QTableWidgetItem,
+    QPushButton,
+    QLabel,
+    QComboBox,
 )
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QTableWidgetItem
@@ -47,7 +52,7 @@ class ListScreen(QWidget):
         # ---------------------------
         self.table = QTableWidget()
         self.table.setColumnCount(2)
-        self.table.setHorizontalHeaderLabels(["Source", "Translation"])
+        self.table.setHorizontalHeaderLabels([f"Source", f"Translation"])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setSelectionBehavior(self.table.SelectRows)
         self.table.cellDoubleClicked.connect(self.handle_double_click)
@@ -76,7 +81,8 @@ class ListScreen(QWidget):
     # ---------------------------
     # 🔹 Refresh UI
     # ---------------------------
-    def refresh(self):
+    def refresh(self):        
+        self.table.setHorizontalHeaderLabels([f"Source ({self.model.src_lang})", f"Translation ({self.model.target_lang})"])
         self.populate_language_dropdown()
         self.populate_table()
         self.show_progress()
@@ -116,13 +122,21 @@ class ListScreen(QWidget):
         if lang:
             self.model.target_lang = lang
             self.populate_table()
-    
+
     def resize_columns_equally(self):
-        total_width = self.table.viewport().width()
+        viewport = self.table.viewport()
+        if viewport is None:
+            return
+
+        total_width = viewport.width()
         col_width = total_width // 2
 
         self.table.setColumnWidth(0, col_width)
         self.table.setColumnWidth(1, col_width)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.resize_columns_equally()
 
     # ---------------------------
     # 🔹 Table Population
@@ -134,7 +148,9 @@ class ListScreen(QWidget):
         for row, (idx, source_text) in enumerate(data):
             # Source column
             src_item = QTableWidgetItem(source_text)
-            src_item.setFlags(Qt.ItemFlags(src_item.flags() & ~Qt.ItemFlag.ItemIsEditable))
+            src_item.setFlags(
+                Qt.ItemFlags(src_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            )
 
             # Target column
             translated = self.model.get_translation(idx)

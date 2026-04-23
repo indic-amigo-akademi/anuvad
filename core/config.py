@@ -2,6 +2,7 @@
 
 import configparser
 import os
+from PyQt5.QtGui import QIcon
 
 
 class AppConfig:
@@ -18,30 +19,22 @@ class AppConfig:
         self.config.read(self.filepath)
 
     def _create_default(self):
-        self.config["app"] = {
-            "name": "Anuvad",
-            "version": "1.0"
-        }
+        self.config["app"] = {"name": "Anuvad", "version": "1.0"}
 
-        self.config["paths"] = {
-            "data_dir": "data",
-            "default_export_dir": "exports"
-        }
+        self.config["paths"] = {"data_dir": "data", "default_export_dir": "exports"}
 
-        self.config["user"] = {
-            "author": "Unknown"
-        }
+        self.config["user"] = {"author": "Unknown"}
 
         self.config["language"] = {
             "default_source": "en",
             "default_target": "bn",
-            "auto_detect": "true"
+            "auto_detect": "true",
         }
 
         self.config["ui"] = {
             "theme": "light",
             "font_family": "Segoe UI",
-            "font_size": "14"
+            "font_size": "14",
         }
 
         with open(self.filepath, "w") as f:
@@ -75,7 +68,7 @@ class AppConfig:
     # ---------------------------
     @property
     def author(self):
-        return self.get("user", "author", "Unknown")
+        return self.get("user", "author", "Anonymous")
 
     # ---------------------------
     # 🔹 Language
@@ -102,3 +95,40 @@ class AppConfig:
     @property
     def font_size(self):
         return self.get_int("ui", "font_size", 14)
+
+    @property
+    def theme(self):
+        return self.get("ui", "theme", "light")
+
+    @property
+    def appname(self):
+        return self.get("app", "name", "Anuvad")
+
+    @property
+    def appversion(self):
+        return self.get("app", "version", "1.0")
+
+    def get_theme_stylesheet(self):
+        if self.theme == "light":
+            return open("assets/qss/light.qss", "r").read()
+        else:
+            return open("assets/qss/dark.qss", "r").read()
+
+    # ---------------------------
+    # 🔹 Save
+    # ---------------------------
+    def save(self):
+        with open(self.filepath, "w") as f:
+            self.config.write(f)
+
+    def set(self, section, key, value):
+        self.config.set(section, key, value)
+        self.save()
+
+    def get_icon(self, name, color="light"):
+        icon_path = os.path.join("assets", "icons", f"{name}.svg")
+        if os.path.exists(icon_path):
+            icon = QIcon(icon_path)
+            icon.setThemeName(color)
+            return icon
+        return QIcon("assets/icons/default.svg")

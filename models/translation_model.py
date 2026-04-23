@@ -160,7 +160,9 @@ class TranslationModel:
         output_dir = self.config.data_dir
         if output_dir is None:
             raise ValueError("Data directory is not configured")
-        self.save_target_file(output_dir=output_dir)
+
+        if save_to_file:
+            self.save_target_file(output_dir=output_dir)
 
     def get_translation(self, idx: int) -> str:
         return self.translations.get(idx, "")

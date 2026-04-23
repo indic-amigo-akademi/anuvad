@@ -1,18 +1,26 @@
 # ui/editor_screen.py
 
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout,
-    QTextEdit, QPushButton, QLabel, QSplitter
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QTextEdit,
+    QPushButton,
+    QLabel,
+    QSplitter,
+    QMessageBox,
 )
 from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QIcon
 
+from core.config import AppConfig
 from core.translator import create_translator
 
 
 class EditorScreen(QWidget):
     back_to_list = pyqtSignal()
 
-    def __init__(self, model, config=None):
+    def __init__(self, model, config: AppConfig):
         super().__init__()
         self.model = model
         self.config = config
@@ -74,11 +82,19 @@ class EditorScreen(QWidget):
         self.prev_btn = QPushButton("← Previous")
         self.prev_btn.clicked.connect(self.go_previous)
 
-        self.auto_btn = QPushButton("⚡ Auto Translate")
+        self.auto_btn = QPushButton("Auto Translate")
+        self.auto_btn.setObjectName("primary")
+        self.auto_btn.setIcon(
+            config.get_icon("translate")
+        )
         self.auto_btn.clicked.connect(self.auto_translate)
 
-        self.save_btn = QPushButton("💾 Save")
-        self.save_btn.clicked.connect(self.save_translation)
+        self.save_btn = QPushButton("Save")
+        self.save_btn.setIcon(
+            config.get_icon("save")
+        )
+        self.save_btn.setObjectName("accent")
+        self.save_btn.clicked.connect(lambda: self.save_translation(True))
 
         self.next_btn = QPushButton("Next →")
         self.next_btn.clicked.connect(self.go_next)
@@ -109,16 +125,17 @@ class EditorScreen(QWidget):
     # ---------------------------
     def save_translation(self, save_to_file=True):
         self.model.save_current_translation(
-            self.translated_text.toPlainText(),
-            save_to_file=save_to_file
+            self.translated_text.toPlainText(), save_to_file=save_to_file
         )
+        if save_to_file:
+            QMessageBox.information(self, "Success", "Translation saved")
 
     # ---------------------------
     # 🔹 Auto Translate
     # ---------------------------
     def auto_translate(self):
         if not self.translator:
-            self.translated_text.setText("[Translator not configured]")
+            QMessageBox.critical(self, "Error", "Translator not configured")
             return
 
         source_text = self.model.get_current_source_text()
@@ -126,19 +143,16 @@ class EditorScreen(QWidget):
         tgt_lang = self.model.target_lang
 
         if not tgt_lang:
-            self.translated_text.setText("[Target language not set]")
+            QMessageBox.critical(self, "Error", "Target language not set")
             return
 
         try:
-            translated = self.translator.translate(
-                source_text,
-                src_lang,
-                tgt_lang
-            )
+            translated = self.translator.translate(source_text, src_lang, tgt_lang)
             self.translated_text.setText(translated)
 
         except Exception as e:
-            self.translated_text.setText(f"[ERROR] {str(e)}")
+            # self.translated_text.setText(f"[ERROR] {str(e)}")
+            QMessageBox.critical(self, "Error", str(e))
 
     # ---------------------------
     # 🔹 Navigation

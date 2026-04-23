@@ -31,23 +31,13 @@ class UploadScreen(QWidget):
         self.model = model
         self.config = config
         self.data_dir = config.data_dir
-
-        sectionTitleFont = QFont(
-            config.font_family, config.get_int("ui", "font_size_md", 14), QFont.Bold
-        )
-
         layout = QVBoxLayout()
         layout.setContentsMargins(30, 30, 30, 30)
         layout.setSpacing(15)
 
-        # Title
-        self.title = QLabel(config.get("app", "title", "Anuvad"))
-        self.title.setObjectName("title")
-        layout.addWidget(self.title, alignment=Qt.AlignmentFlag.AlignCenter)
-
         # -------- Existing Projects --------
         resumeLabel = QLabel("Resume Existing Project")
-        resumeLabel.setFont(sectionTitleFont)
+        resumeLabel.setObjectName("title")
         layout.addWidget(resumeLabel)
 
         self.project_list = QListWidget()
@@ -74,7 +64,7 @@ class UploadScreen(QWidget):
 
         # -------- New Project --------
         newLabel = QLabel("New Project")
-        newLabel.setFont(sectionTitleFont)
+        newLabel.setObjectName("title")
         layout.addWidget(newLabel)
 
         self.upload_btn = QPushButton("Choose File")

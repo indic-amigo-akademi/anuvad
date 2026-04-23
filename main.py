@@ -5,74 +5,36 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QFont
 from ui.main_window import MainWindow
 from core.config import AppConfig
+from PyQt5.QtGui import QIcon
+import ctypes
+import os
+
+def on_exit(config: AppConfig):
+    if os.name == "nt":
+        ctypes.windll.user32.ExitProcess(0)
+    config.save()
 
 
 def main():
     config = AppConfig()
+    logo_path = config.get("app", "logo_path", "icon.ico")
+
     app = QApplication(sys.argv)
-    font = QFont(config.font_family, config.font_size)
-
-    themes_map = {
-        "light": {
-            "background_color": "#fefefe",
-            "text_color": "#333",
-            "button": {
-                "background_color": "#acacac",
-                "border_color": "#ccc"
-            }
-        },
-        "dark": {
-            "background_color": "#333",
-            "text_color": "#fefefe",
-            "button": {
-                "background_color": "#5a5a5a",
-                "border_color": "#777"
-            }
-        }
-    }
-
-    theme = config.get("ui", "theme", "light")
-    if theme not in themes_map:
-        theme = "light"
-
+    app.setWindowIcon(QIcon(logo_path))
     # Set global styles
-    app.setStyleSheet(f"""
-    QWidget {{
-        font-family: 'Segoe UI', 'Nirmala UI', sans-serif;
-        font-size: 14px;
-        background-color: {themes_map[theme]["background_color"]};
-        color: {themes_map[theme]["text_color"]};
-    }}
-
-    QLabel#title {{
-        font-size: 20px;
-        font-weight: bold;
-    }}
-
-    QPushButton {{
-        padding: 6px 12px;
-        border-radius: 6px;
-        border: 1px solid {themes_map[theme]["button"]["border_color"]};
-        background-color: {themes_map[theme]["button"]["background_color"]};
-        color: {themes_map[theme]["text_color"]};
-    }}
-
-    QListWidget {{
-        padding: 6px;
-    }}
-
-    QTextEdit {{
-        padding: 8px;
-        font-size: 14px;
-    }}
-    """)
-    app.setFont(font)
+    app.setStyleSheet(config.get_theme_stylesheet())
     
     window = MainWindow(config=config)
     window.show()
 
     sys.exit(app.exec_())
+    
+    # Handling app exit 
+    on_exit(config)
 
 
 if __name__ == "__main__":
+    if os.name == "nt":
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("iaa.anuvad.app")
+    
     main()

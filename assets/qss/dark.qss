@@ -44,6 +44,10 @@ QPushButton#accent {
     color: #111827;
 }
 
+QPushButton#accent:hover {
+    background-color: #fcd34d;
+}
+
 /* Inputs */
 QTextEdit,
 QTableWidget {

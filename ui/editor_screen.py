@@ -9,9 +9,9 @@ from PyQt5.QtWidgets import (
     QLabel,
     QSplitter,
     QMessageBox,
+    QStyle
 )
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QIcon
 
 from core.config import AppConfig
 from core.translator import create_translator
@@ -91,7 +91,7 @@ class EditorScreen(QWidget):
 
         self.save_btn = QPushButton("Save")
         self.save_btn.setIcon(
-            config.get_icon("save")
+            self.style().standardIcon(QStyle.SP_DialogSaveButton)
         )
         self.save_btn.setObjectName("accent")
         self.save_btn.clicked.connect(lambda: self.save_translation(True))

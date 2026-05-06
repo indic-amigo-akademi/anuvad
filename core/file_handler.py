@@ -2,6 +2,7 @@
 
 from typing import List, Tuple, Dict
 import os
+import sys
 
 
 def get_base_filename(filepath: str) -> str:
@@ -10,6 +11,16 @@ def get_base_filename(filepath: str) -> str:
     """
     return os.path.splitext(os.path.basename(filepath))[0]
 
+def resource_path(relative_path):
+    if getattr(sys, 'frozen', False):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+def load_qss(path):
+    with open(resource_path(path), "r", encoding="utf-8") as f:
+        return f.read()
 
 def save_structured_file(
     base_filename: str,
@@ -57,8 +68,6 @@ def list_projects(data_dir="data"):
         "dracula": ["dracula.en.abd", "dracula.bn.abd"]
     }
     """
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
 
     files = os.listdir(data_dir)
     projects = {}

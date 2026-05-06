@@ -3,12 +3,14 @@
 import configparser
 import os
 from PyQt5.QtGui import QIcon
+from core.file_handler import load_qss
 
 
 class AppConfig:
     def __init__(self, filepath="app.cfg"):
         self.filepath = filepath
         self.config = configparser.ConfigParser()
+        self.config_dir = os.path.join(os.path.expanduser("~"), ".anuvad")
 
         self._load()
 
@@ -57,11 +59,22 @@ class AppConfig:
     # ---------------------------
     @property
     def data_dir(self):
-        return self.get("paths", "data_dir", "data")
+        data_dir_path = os.path.join(
+            self.config_dir, self.get("paths", "data_dir", "data") or "data"
+        )
+        if not os.path.exists(data_dir_path):
+            os.makedirs(data_dir_path)
+        return data_dir_path
 
     @property
     def export_dir(self):
-        return self.get("paths", "default_export_dir", "exports")
+        export_dir_path = os.path.join(
+            self.config_dir,
+            self.get("paths", "default_export_dir", "exports") or "exports",
+        )
+        if not os.path.exists(export_dir_path):
+            os.makedirs(export_dir_path)
+        return export_dir_path
 
     # ---------------------------
     # 🔹 User
@@ -110,9 +123,9 @@ class AppConfig:
 
     def get_theme_stylesheet(self):
         if self.theme == "light":
-            return open("assets/qss/light.qss", "r").read()
+            return load_qss("assets/qss/light.qss")
         else:
-            return open("assets/qss/dark.qss", "r").read()
+            return load_qss("assets/qss/dark.qss")
 
     # ---------------------------
     # 🔹 Save

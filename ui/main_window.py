@@ -136,6 +136,6 @@ class MainWindow(QMainWindow):
 A structured desktop translation workbench.
 
 Version: {self.config.appversion}
-Author: {self.config.author}
+Author: {self.config.appauthor}
             """,
         )

@@ -10,12 +10,13 @@ from PyQt5.QtWidgets import (
     QCheckBox,
     QListWidget,
     QHBoxLayout,
+    QFrame
 )
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSignal
+from ui.custom_widget import DividerWidget
 
-from core.parser import parse_raw_text, parse_structured_file
-from core.file_handler import get_base_filename, save_structured_file, list_projects
+from core.parser import parse_raw_text
+from core.file_handler import get_base_filename, list_projects
 from core.language import detect_language, SUPPORTED_LANGUAGES
 from core.config import AppConfig
 from core.file_handler import read_abd_file
@@ -58,9 +59,11 @@ class UploadScreen(QWidget):
         layout.addLayout(btn_row)
 
         # -------- Divider --------
-        layout.addWidget(
-            QLabel("──────── OR ────────"), alignment=Qt.AlignmentFlag.AlignCenter
-        )
+        # layout.addWidget(
+        #     QLabel("──────── OR ────────"), alignment=Qt.AlignmentFlag.AlignCenter
+        # )
+        line = DividerWidget()
+        layout.addWidget(line)
 
         # -------- New Project --------
         newLabel = QLabel("New Project")

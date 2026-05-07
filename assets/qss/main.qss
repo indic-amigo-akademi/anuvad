@@ -1,0 +1,136 @@
+QWidget {
+    font-family: "Segoe UI", "Nirmala UI", sans-serif;
+    font-size: 14px;
+}
+
+QLabel#title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Buttons */
+QPushButton {
+    border-radius: 6px;
+    padding: 6px 12px;
+}
+
+/* Primary action */
+QPushButton#primary {
+    background-color: #4f46e5;
+    color: white;
+}
+
+QPushButton#primary:hover {
+    background-color: #4338ca;
+}
+
+/* Accent button */
+QPushButton#accent {
+    background-color: #f59e0b;
+    color: #111827;
+}
+
+QPushButton#accent:hover {
+    background-color: #fcd34d;
+}
+
+/* Inputs */
+QTextEdit,
+QTableWidget {
+    border-radius: 6px;
+}
+
+/* Table Header */
+QHeaderView::section {
+    padding: 6px;
+}
+
+/* Scrollbar - Vertical */
+QScrollBar:vertical {
+    width: 10px;
+    margin: 4px 0 4px 0;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical {
+    min-height: 30px;
+    border-radius: 5px;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+/* Scrollbar - Horizontal */
+QScrollBar:horizontal {
+    height: 10px;
+    margin: 0 4px 0 4px;
+    border-radius: 15px;
+}
+
+QScrollBar::handle:horizontal {
+    min-width: 30px;
+    border-radius: 15px;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    width: 0;
+}
+
+/* Combobox */
+QComboBox {
+    border-radius: 6px;
+    padding: 5px 10px;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 24px;
+}
+
+QComboBox::down-arrow {
+    image: url(assets/icons/chevron-down.svg);
+    width: 12px;
+    height: 12px;
+}
+
+QComboBox QAbstractItemView {
+    padding: 5px;
+}
+
+/* CheckBox */
+
+QCheckBox::indicator:checked {
+    image: url(assets/icons/checkbox_checked.svg);
+}
+
+QCheckBox::indicator:unchecked {
+    image: url(assets/icons/checkbox_unchecked.svg);
+}
+
+/* 
+QCheckBox::indicator:unchecked:hover {
+    image: url(assets/icons/checkbox_unchecked_hover.png);
+}
+
+QCheckBox::indicator:unchecked:pressed {
+    image: url(assets/icons/checkbox_unchecked_pressed.png);
+}
+
+QCheckBox::indicator:checked:hover {
+    image: url(assets/icons/checkbox_checked_hover.png);
+}
+
+QCheckBox::indicator:checked:pressed {
+    image: url(assets/icons/checkbox_checked_pressed.png);
+}
+
+QCheckBox::indicator:indeterminate:hover {
+    image: url(assets/icons/checkbox_indeterminate_hover.png);
+}
+
+QCheckBox::indicator:indeterminate:pressed {
+    image: url(assets/icons/checkbox_indeterminate_pressed.png);
+} */

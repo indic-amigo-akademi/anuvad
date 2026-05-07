@@ -3,12 +3,12 @@
 import configparser
 import os
 from PyQt5.QtGui import QIcon
-from core.file_handler import load_qss
+from core.file_handler import load_qss, resource_path
 
 
 class AppConfig:
     def __init__(self, filepath="app.cfg"):
-        self.filepath = filepath
+        self.filepath = resource_path(filepath)
         self.config = configparser.ConfigParser()
         self.config_dir = os.path.join(os.path.expanduser("~"), ".anuvad")
 
@@ -21,11 +21,11 @@ class AppConfig:
         self.config.read(self.filepath)
 
     def _create_default(self):
-        self.config["app"] = {"name": "Anuvad", "version": "1.0"}
+        self.config["app"] = {"name": "Anuvad", "version": "1.0", "author": ""}
 
         self.config["paths"] = {"data_dir": "data", "default_export_dir": "exports"}
 
-        self.config["user"] = {"author": "Unknown"}
+        self.config["user"] = {"author": "Anonymous"}
 
         self.config["language"] = {
             "default_source": "en",
@@ -35,7 +35,7 @@ class AppConfig:
 
         self.config["ui"] = {
             "theme": "light",
-            "font_family": "Segoe UI",
+            "font_family": "'Segoe UI', 'Nirmala UI', sans-serif",
             "font_size": "14",
         }
 
@@ -118,14 +118,20 @@ class AppConfig:
         return self.get("app", "name", "Anuvad")
 
     @property
+    def appauthor(self):
+        return self.get("app", "author", "Anonymous")
+
+    @property
     def appversion(self):
         return self.get("app", "version", "1.0")
 
     def get_theme_stylesheet(self):
-        if self.theme == "light":
-            return load_qss("assets/qss/light.qss")
-        else:
-            return load_qss("assets/qss/dark.qss")
+        stylesheet = (
+            load_qss("assets/qss/main.qss")
+            + "\n"
+            + load_qss(f"assets/qss/{self.theme}.qss")
+        )
+        return stylesheet
 
     # ---------------------------
     # 🔹 Save
@@ -139,9 +145,9 @@ class AppConfig:
         self.save()
 
     def get_icon(self, name, color="light"):
-        icon_path = os.path.join("assets", "icons", f"{name}.svg")
+        icon_path = resource_path(os.path.join("assets", "icons", f"{name}.svg"))
         if os.path.exists(icon_path):
             icon = QIcon(icon_path)
             icon.setThemeName(color)
             return icon
-        return QIcon("assets/icons/default.svg")
+        return QIcon(resource_path("assets/icons/default.svg"))

@@ -15,6 +15,7 @@ from PyQt5.QtCore import pyqtSignal, Qt
 
 from core.config import AppConfig
 from core.translator import create_translator
+from core.language import convert_to_latin, is_latin
 
 
 class EditorScreen(QWidget):
@@ -52,6 +53,12 @@ class EditorScreen(QWidget):
         self.source_text.setReadOnly(True)
         left_layout.addWidget(self.source_text)
 
+        self.source_text_roman = QLabel()
+        self.source_text_roman.setWordWrap(True)
+        self.source_text_roman.setFixedHeight(200)
+        left_layout.addWidget(self.source_text_roman)
+        self.set_latin_text(self.source_text.toPlainText(), self.source_text_roman)
+
         left_panel.setLayout(left_layout)
 
         # Right panel
@@ -64,6 +71,12 @@ class EditorScreen(QWidget):
 
         self.translated_text = QTextEdit()
         right_layout.addWidget(self.translated_text)
+
+        self.translated_text_roman = QLabel()
+        self.translated_text_roman.setWordWrap(True)
+        self.translated_text_roman.setFixedHeight(200)
+        right_layout.addWidget(self.translated_text_roman)
+        self.set_latin_text(self.translated_text.toPlainText(), self.translated_text_roman)
 
         right_panel.setLayout(right_layout)
 
@@ -91,7 +104,7 @@ class EditorScreen(QWidget):
 
         self.save_btn = QPushButton("Save")
         self.save_btn.setIcon(
-            self.style().standardIcon(QStyle.SP_DialogSaveButton)
+            config.get_icon("save")
         )
         self.save_btn.setObjectName("accent")
         self.save_btn.clicked.connect(lambda: self.save_translation(True))
@@ -101,6 +114,9 @@ class EditorScreen(QWidget):
 
         self.back_btn = QPushButton("Back")
         self.back_btn.clicked.connect(self.back_to_list.emit)
+
+        self.translated_text.textChanged.connect(lambda: self.set_latin_text(self.translated_text.toPlainText(), self.translated_text_roman))
+        self.source_text.textChanged.connect(lambda: self.set_latin_text(self.source_text.toPlainText(), self.source_text_roman))
 
         nav_layout.addWidget(self.prev_btn)
         nav_layout.addWidget(self.auto_btn)
@@ -112,6 +128,12 @@ class EditorScreen(QWidget):
         main_layout.addLayout(nav_layout)
 
         self.setLayout(main_layout)
+
+    def set_latin_text(self, text:str, label:QLabel):
+        if is_latin(text):
+            label.setText("")
+        else:
+            label.setText(convert_to_latin(text))
 
     # ---------------------------
     # 🔹 Load Data

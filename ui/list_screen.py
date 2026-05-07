@@ -9,15 +9,19 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QLabel,
     QComboBox,
+    QAbstractItemView,
+    QMenu,
+    QMessageBox,
+    QProgressDialog,
 )
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QTableWidgetItem
 from PyQt5.QtGui import QColor
 
 from models.translation_model import TranslationModel
 from core.config import AppConfig
 
 from core.language import SUPPORTED_LANGUAGES
+from core.translator import create_translator
 
 
 class ListScreen(QWidget):
@@ -27,6 +31,7 @@ class ListScreen(QWidget):
         super().__init__()
         self.model = model
         self.config = config
+        self.translator = create_translator(config) if config else None
 
         layout = QVBoxLayout()
         layout.setContentsMargins(20, 20, 20, 20)
@@ -58,7 +63,10 @@ class ListScreen(QWidget):
         self.table.setHorizontalHeaderLabels([f"Source", f"Translation"])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setSelectionBehavior(self.table.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
         self.table.cellDoubleClicked.connect(self.handle_double_click)
+        self.table.customContextMenuRequested.connect(self.show_context_menu)
 
         layout.addWidget(self.table, stretch=1)
 
@@ -176,6 +184,116 @@ class ListScreen(QWidget):
     # ---------------------------
     # 🔹 Actions
     # ---------------------------
+    def selected_rows(self):
+        rows = {index.row() for index in self.table.selectionModel().selectedRows()}
+        current_row = self.table.currentRow()
+
+        if not rows and current_row >= 0:
+            rows.add(current_row)
+
+        return sorted(rows)
+
+    def show_context_menu(self, position):
+        clicked_index = self.table.indexAt(position)
+        selection_model = self.table.selectionModel()
+        is_selected = (
+            selection_model.isSelected(clicked_index)
+            if selection_model and clicked_index.isValid()
+            else False
+        )
+
+        if clicked_index.isValid() and not is_selected:
+            self.table.selectRow(clicked_index.row())
+
+        selected_rows = self.selected_rows()
+        if not selected_rows:
+            return
+
+        count = len(selected_rows)
+        suffix = "Item" if count == 1 else f"{count} Items"
+
+        menu = QMenu(self)
+        clean_action = menu.addAction(f"Clean Translation for {suffix}")
+        translate_action = menu.addAction(f"Auto-Translate {suffix}")
+        clean_translate_action = menu.addAction(f"Clean and Auto-Translate {suffix}")
+
+        action = menu.exec_(self.table.viewport().mapToGlobal(position))
+
+        if action == clean_action:
+            self.clean_selected_translations()
+        elif action == translate_action:
+            self.auto_translate_selected(clean_first=False)
+        elif action == clean_translate_action:
+            self.auto_translate_selected(clean_first=True)
+
+    def clean_selected_translations(self):
+        rows = self.selected_rows()
+        if not rows:
+            return
+
+        for row in rows:
+            idx, _ = self.model.get_item_by_index(row)
+            self.model.translations[idx] = ""
+
+        self.model.save_target_file(output_dir=self.config.data_dir)
+        self.populate_table()
+        self.show_progress()
+
+    def auto_translate_selected(self, clean_first=False):
+        rows = self.selected_rows()
+        if not rows:
+            return
+
+        if not self.translator:
+            QMessageBox.critical(self, "Error", "Translator not configured")
+            return
+
+        if not self.model.target_lang:
+            QMessageBox.critical(self, "Error", "Target language not set")
+            return
+
+        progress = QProgressDialog(
+            "Translating selected items...",
+            "Cancel",
+            0,
+            len(rows),
+            self,
+        )
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setMinimumDuration(0)
+
+        updated = 0
+
+        try:
+            for position, row in enumerate(rows, start=1):
+                if progress.wasCanceled():
+                    break
+
+                idx, source_text = self.model.get_item_by_index(row)
+                progress.setLabelText(f"Translating item #{idx}...")
+
+                if clean_first:
+                    self.model.translations[idx] = ""
+
+                translated = self.translator.translate(
+                    source_text,
+                    self.model.src_lang,
+                    self.model.target_lang,
+                )
+                self.model.translations[idx] = translated.strip()
+                updated += 1
+                progress.setValue(position)
+
+            if updated:
+                self.model.save_target_file(output_dir=self.config.data_dir)
+                self.populate_table()
+                self.show_progress()
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
+        finally:
+            progress.close()
+
     def open_selected(self):
         row = self.table.currentRow()
         if row >= 0:

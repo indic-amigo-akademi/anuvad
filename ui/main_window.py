@@ -116,7 +116,7 @@ class MainWindow(QMainWindow):
 
     def save_current(self):
         # trigger save in editor if active
-        if self.stack.currentWidget() == self.editor_screen:
+        if self.stack.currentWidget() == self.editor_screen or self.stack.currentWidget() == self.list_screen:
             self.editor_screen.save_translation()
 
     def set_light_theme(self):

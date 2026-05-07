@@ -10,10 +10,10 @@ from PyQt5.QtWidgets import (
     QCheckBox,
     QListWidget,
     QHBoxLayout,
-    QFrame
+    QDialog,
 )
 from PyQt5.QtCore import pyqtSignal
-from ui.custom_widget import DividerWidget
+from ui.custom_widget import DividerWidget, ComboInputDialog
 
 from core.parser import parse_raw_text
 from core.file_handler import get_base_filename, list_projects
@@ -118,7 +118,7 @@ class UploadScreen(QWidget):
         files = self.projects[base]
 
         src_file = None
-        target_file = None
+        target_files = []
 
         # Determine which file is source and which is target based on metadata
         for f in files:
@@ -130,7 +130,7 @@ class UploadScreen(QWidget):
             if tgt_lang == "":
                 src_file = f
             else:
-                target_file = f
+                target_files.append(f)
 
         if not src_file:
             return
@@ -139,9 +139,24 @@ class UploadScreen(QWidget):
 
         self.model.load_source_data(src_path)
 
-        if target_file:
-            tgt_path = f"{self.data_dir}/{target_file}"
-            self.model.load_target_data(tgt_path)
+        if target_files:
+            # ask user for target language
+            dlg = ComboInputDialog(
+                title="Multiple Targets",
+                label="Pick the target language:",
+                items=[
+                    (SUPPORTED_LANGUAGES[tgt_file.split(".")[-2]], tgt_file.split(".")[-2])
+                    for tgt_file in target_files
+                ],
+            )
+            self.model.avl_tgt_langs.append(
+                [tgt_file.split(".")[-2] for tgt_file in target_files]
+            )
+            if dlg.exec_() == QDialog.Accepted:
+                tgt_lang = dlg.selectedData()
+                self.model.set_target_lang(
+                    tgt_lang, data_dir=self.data_dir
+                )
 
         self.file_processed.emit()
 

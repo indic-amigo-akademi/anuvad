@@ -14,13 +14,16 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QTableWidgetItem
 from PyQt5.QtGui import QColor
 
+from models.translation_model import TranslationModel
+from core.config import AppConfig
+
 from core.language import SUPPORTED_LANGUAGES
 
 
 class ListScreen(QWidget):
     open_editor = pyqtSignal(int)
 
-    def __init__(self, model, config):
+    def __init__(self, model: TranslationModel, config: AppConfig):
         super().__init__()
         self.model = model
         self.config = config
@@ -97,7 +100,10 @@ class ListScreen(QWidget):
         src_lang = self.model.src_lang
 
         for code, name in SUPPORTED_LANGUAGES.items():
-            if code != src_lang:
+            if code != src_lang and code in self.model.avl_tgt_langs:
+                self.lang_dropdown.addItem(name, code)
+        for code, name in SUPPORTED_LANGUAGES.items():
+            if code != src_lang and code not in self.model.avl_tgt_langs:
                 self.lang_dropdown.addItem(name, code)
 
         # Set default target
@@ -120,7 +126,8 @@ class ListScreen(QWidget):
     def change_target_language(self):
         lang = self.lang_dropdown.currentData()
         if lang:
-            self.model.target_lang = lang
+            self.model.set_target_lang(lang, data_dir=self.config.data_dir)
+            self.table.setHorizontalHeaderLabels([f"Source ({self.model.src_lang})", f"Translation ({self.model.target_lang})"])
             self.populate_table()
 
     def resize_columns_equally(self):

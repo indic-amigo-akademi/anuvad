@@ -4,6 +4,7 @@ from typing import List, Tuple, Dict, Optional
 from datetime import datetime, timezone
 from core.file_handler import read_abd_file, save_structured_file, save_translated_file
 from core.config import AppConfig
+import os
 
 
 class TranslationModel:
@@ -48,6 +49,18 @@ class TranslationModel:
         self.author = self.config.author
         self.created_at = None
         self.last_modified = None
+        self.avl_tgt_langs = []
+
+    def set_target_lang(self, target_lang: str, data_dir: str = "data"):
+        self.target_lang = target_lang
+        tgt_path = f"{data_dir}/{self.base_filename}.{target_lang}.abd"
+        if target_lang not in self.avl_tgt_langs:
+            self.avl_tgt_langs.append(target_lang)
+        # check if translation file exists
+        if os.path.exists(tgt_path):
+            self.load_target_data(tgt_path, target_lang)
+        else:
+            self.translations = {}
 
     # ---------------------------
     # 🔹 LOAD DATA
@@ -92,6 +105,8 @@ class TranslationModel:
         self.translations = {idx: text for idx, text in data}
         self.target_lang = metadata.get("language", target_lang)
         self.current_index = 0
+        self.created_at = metadata.get("created_at")
+        self.last_modified = metadata.get("last_modified")
 
     # ---------------------------
     # 🔹 GETTERS
@@ -172,9 +187,7 @@ class TranslationModel:
     # ---------------------------
     def translated_count(self) -> int:
         return sum(
-            1
-            for x in self.translations.values()
-            if x is None or x.strip() != ""
+            1 for x in self.translations.values() if x is None or x.strip() != ""
         )
 
     def completion_percentage(self) -> float:

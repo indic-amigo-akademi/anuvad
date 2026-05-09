@@ -1,3 +1,4 @@
 langdetect==1.0.9
 pyqt5
 pyinstaller
+indic-transliteration

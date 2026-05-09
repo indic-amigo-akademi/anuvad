@@ -3,11 +3,13 @@
 import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QFont
-from ui.main_window import MainWindow
-from core.config import AppConfig
 from PyQt5.QtGui import QIcon
 import ctypes
 import os
+from ui.main_window import MainWindow
+from core.config import AppConfig
+from core.file_handler import resource_path
+
 
 def on_exit(config: AppConfig):
     if os.name == "nt":
@@ -17,10 +19,10 @@ def on_exit(config: AppConfig):
 
 def main():
     config = AppConfig()
-    logo_path = config.get("app", "logo_path", "icon.ico")
+    logo_path = config.get("paths", "logo_path", "icon.ico")
 
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon(logo_path))
+    app.setWindowIcon(QIcon(resource_path(logo_path)))
     # Set global styles
     app.setStyleSheet(config.get_theme_stylesheet())
     

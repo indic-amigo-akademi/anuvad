@@ -1,5 +1,7 @@
 # ui/upload_screen.py (enhanced)
 
+import os
+
 from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -10,15 +12,15 @@ from PyQt5.QtWidgets import (
     QCheckBox,
     QListWidget,
     QHBoxLayout,
+    QDialog,
 )
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSignal
+from ui.custom_widget import DividerWidget, ComboInputDialog
 
-from core.parser import parse_raw_text, parse_structured_file
-from core.file_handler import get_base_filename, save_structured_file, list_projects
+from core.parser import parse_raw_text
+from core.file_handler import get_base_filename, list_projects, read_abd_metadata
 from core.language import detect_language, SUPPORTED_LANGUAGES
 from core.config import AppConfig
-from core.file_handler import read_abd_file
 
 from models.translation_model import TranslationModel
 
@@ -58,9 +60,11 @@ class UploadScreen(QWidget):
         layout.addLayout(btn_row)
 
         # -------- Divider --------
-        layout.addWidget(
-            QLabel("──────── OR ────────"), alignment=Qt.AlignmentFlag.AlignCenter
-        )
+        # layout.addWidget(
+        #     QLabel("──────── OR ────────"), alignment=Qt.AlignmentFlag.AlignCenter
+        # )
+        line = DividerWidget()
+        layout.addWidget(line)
 
         # -------- New Project --------
         newLabel = QLabel("New Project")
@@ -115,30 +119,46 @@ class UploadScreen(QWidget):
         files = self.projects[base]
 
         src_file = None
-        target_file = None
+        target_files = []
 
         # Determine which file is source and which is target based on metadata
         for f in files:
-            filepath = f"{self.data_dir}/{f}"
-            metadata, _ = read_abd_file(filepath)
+            filepath = os.path.join(self.data_dir, f)
+            metadata = read_abd_metadata(filepath)
             tgt_lang = metadata.get("language", "")
-            src_lang = metadata.get("source_language", "en")
 
             if tgt_lang == "":
                 src_file = f
             else:
-                target_file = f
+                target_files.append(f)
 
         if not src_file:
             return
 
-        src_path = f"{self.data_dir}/{src_file}"
+        src_path = os.path.join(self.data_dir, src_file)
 
         self.model.load_source_data(src_path)
 
-        if target_file:
-            tgt_path = f"{self.data_dir}/{target_file}"
-            self.model.load_target_data(tgt_path)
+        if target_files:
+            target_langs = [tgt_file.split(".")[-2] for tgt_file in target_files]
+            for tgt_lang in target_langs:
+                if tgt_lang not in self.model.avl_tgt_langs:
+                    self.model.avl_tgt_langs.append(tgt_lang)
+
+            # ask user for target language
+            dlg = ComboInputDialog(
+                title="Multiple Target Languages Detected",
+                label="Pick the target language:",
+                items=[
+                    (SUPPORTED_LANGUAGES[tgt_lang], tgt_lang)
+                    for tgt_lang in target_langs
+                ],
+            )
+            if dlg.exec_() == QDialog.Accepted:
+                tgt_lang = dlg.selectedData()
+                self.model.set_target_lang(
+                    tgt_lang, data_dir=self.data_dir
+                )
 
         self.file_processed.emit()
 

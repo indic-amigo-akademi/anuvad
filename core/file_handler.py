@@ -12,6 +12,8 @@ def get_base_filename(filepath: str) -> str:
     return os.path.splitext(os.path.basename(filepath))[0]
 
 def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    relative_path = os.path.normpath(relative_path)
     if getattr(sys, 'frozen', False):
         base_path = sys._MEIPASS
     else:
@@ -19,6 +21,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 def load_qss(path):
+    """Load qss file"""
     with open(resource_path(path), "r", encoding="utf-8") as f:
         return f.read()
 
@@ -83,6 +86,14 @@ def list_projects(data_dir="data"):
 
 
 def write_abd_file(filepath, metadata: dict, data):
+    """
+    Writes structured file like:
+    #1
+    text
+
+    #2
+    text
+    """
     with open(filepath, "w", encoding="utf-8") as f:
         # Metadata block
         f.write("# --- ANUVAD METADATA ---\n")
@@ -96,6 +107,14 @@ def write_abd_file(filepath, metadata: dict, data):
 
 
 def read_abd_file(filepath):
+    """
+    Reads structured file like:
+    #1
+    text
+
+    #2
+    text
+    """
     metadata = {}
     data = []
 
@@ -132,3 +151,28 @@ def read_abd_file(filepath):
         data.append((current_id, "\n".join(buffer).strip()))
 
     return metadata, data
+
+
+def read_abd_metadata(filepath):
+    """
+    Reads only the metadata block from an ABD file.
+    Stops before segment content so project listing/opening stays lightweight.
+    """
+    metadata = {}
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        first_line = f.readline()
+        if not first_line.startswith("# --- ANUVAD METADATA ---"):
+            return metadata
+
+        for line in f:
+            if line.startswith("# --- END METADATA ---"):
+                break
+
+            if ":" not in line:
+                continue
+
+            key, value = line.split(":", 1)
+            metadata[key.strip()] = value.strip()
+
+    return metadata

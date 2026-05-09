@@ -4,6 +4,7 @@ from typing import List, Tuple, Dict, Optional
 from datetime import datetime, timezone
 from core.file_handler import read_abd_file, save_structured_file, save_translated_file
 from core.config import AppConfig
+import os
 
 
 class TranslationModel:
@@ -48,6 +49,19 @@ class TranslationModel:
         self.author = self.config.author
         self.created_at = None
         self.last_modified = None
+        self.avl_tgt_langs = []
+        self.has_unsaved_changes = False
+
+    def set_target_lang(self, target_lang: str, data_dir: str = "data"):
+        self.target_lang = target_lang
+        tgt_path = os.path.join(data_dir, f"{self.base_filename}.{target_lang}.abd")
+        if target_lang not in self.avl_tgt_langs:
+            self.avl_tgt_langs.append(target_lang)
+        # check if translation file exists
+        if os.path.exists(tgt_path):
+            self.load_target_data(tgt_path, target_lang)
+        else:
+            self.translations = {}
 
     # ---------------------------
     # 🔹 LOAD DATA
@@ -63,6 +77,7 @@ class TranslationModel:
 
         # Reset translations when new file is loaded
         self.translations = {}
+        self.has_unsaved_changes = False
 
     def load_source_data(self, filepath: str, src_lang: str = "en"):
         """
@@ -79,6 +94,7 @@ class TranslationModel:
 
         # Reset translations when new file is loaded
         self.translations = {}
+        self.has_unsaved_changes = False
 
     def load_target_data(self, filepath: str, target_lang: str = "en"):
         """
@@ -92,6 +108,9 @@ class TranslationModel:
         self.translations = {idx: text for idx, text in data}
         self.target_lang = metadata.get("language", target_lang)
         self.current_index = 0
+        self.created_at = metadata.get("created_at")
+        self.last_modified = metadata.get("last_modified")
+        self.has_unsaved_changes = False
 
     # ---------------------------
     # 🔹 GETTERS
@@ -156,6 +175,7 @@ class TranslationModel:
         idx = self.get_current_id()
         if idx is not None:
             self.translations[idx] = text.strip()
+            self.has_unsaved_changes = True
 
         output_dir = self.config.data_dir
         if output_dir is None:
@@ -172,9 +192,7 @@ class TranslationModel:
     # ---------------------------
     def translated_count(self) -> int:
         return sum(
-            1
-            for x in self.translations.values()
-            if x is None or x.strip() != ""
+            1 for x in self.translations.values() if x is not None and x.strip() != ""
         )
 
     def completion_percentage(self) -> float:
@@ -187,7 +205,9 @@ class TranslationModel:
         return [
             idx
             for idx, _ in self.source_data
-            if idx not in self.translations or not self.translations[idx].strip()
+            if idx not in self.translations
+            or self.translations[idx] is None
+            or not self.translations[idx].strip()
         ]
 
     # ---------------------------
@@ -210,6 +230,7 @@ class TranslationModel:
             metadata=self.metadata,
             output_dir=output_dir,
         )
+        self.has_unsaved_changes = False
 
     # ---------------------------
     # 🔹 BULK OPERATIONS
@@ -220,6 +241,7 @@ class TranslationModel:
         """
         for idx, text in translations.items():
             self.translations[idx] = text.strip()
+        self.has_unsaved_changes = True
 
     # ---------------------------
     # 🔹 VALIDATION

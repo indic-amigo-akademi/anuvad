@@ -1,5 +1,9 @@
 # 📝 Anuvad – Desktop Translation Workbench
 
+<center>
+<img width="200" src="assets/images/logo.png" alt="Anuvad" />
+</center>
+
 **Anuvad** is a PyQt5-based desktop application designed for structured text translation workflows. It allows users to break down large text files into manageable segments, translate them efficiently, and track progress—all within a clean, professional UI.
 
 ---

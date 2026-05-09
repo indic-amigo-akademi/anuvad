@@ -115,9 +115,14 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self.upload_screen)
 
     def save_current(self):
-        # trigger save in editor if active
-        if self.stack.currentWidget() == self.editor_screen:
-            self.editor_screen.save_translation()
+        current_widget = self.stack.currentWidget()
+
+        if current_widget == self.editor_screen:
+            self.editor_screen.save_changes()
+        elif current_widget == self.list_screen:
+            self.list_screen.save_changes()
+        else:
+            QMessageBox.information(self, "Save", "Open a project before saving translations.")
 
     def set_light_theme(self):
         self.config.set("ui", "theme", "light")
@@ -136,6 +141,6 @@ class MainWindow(QMainWindow):
 A structured desktop translation workbench.
 
 Version: {self.config.appversion}
-Author: {self.config.author}
+Author: {self.config.appauthor}
             """,
         )

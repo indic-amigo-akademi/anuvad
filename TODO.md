@@ -41,13 +41,13 @@
 
 ## Low Priority
 
-- [ ] Cache loaded QSS stylesheets and icons in `core/config.py`.
+- [x] Cache loaded QSS stylesheets and icons in `core/config.py`.
     - Avoid rereading theme files and recreating icons repeatedly.
 
-- [ ] Clean up unused imports and unused fields.
+- [x] Clean up unused imports and unused fields.
     - Remove unused imports from `core/translator.py`.
     - Either apply `timeout`/`throttle` or remove them until needed.
 
-- [ ] Harden file/path handling.
+- [x] Harden file/path handling.
     - Prefer `os.path.join(...)` or `pathlib.Path` over manual `f"{dir}/{file}"`.
     - Keep behavior consistent across platforms.

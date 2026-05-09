@@ -209,13 +209,11 @@ class EditorScreen(QWidget):
         self.translation_progress.setWindowModality(Qt.WindowModal)
         self.translation_progress.setMinimumDuration(0)
 
-        timeout = self.config.get_int("api", "timeout", fallback=10)
         self.translation_thread = QThread(self)
         self.translation_worker = TranslationWorker(
             [(current_id, source_text)],
             src_lang,
             tgt_lang,
-            timeout=timeout,
         )
         self.translation_worker.moveToThread(self.translation_thread)
 

@@ -1,5 +1,7 @@
 # ui/upload_screen.py (enhanced)
 
+import os
+
 from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -121,7 +123,7 @@ class UploadScreen(QWidget):
 
         # Determine which file is source and which is target based on metadata
         for f in files:
-            filepath = f"{self.data_dir}/{f}"
+            filepath = os.path.join(self.data_dir, f)
             metadata = read_abd_metadata(filepath)
             tgt_lang = metadata.get("language", "")
 
@@ -133,7 +135,7 @@ class UploadScreen(QWidget):
         if not src_file:
             return
 
-        src_path = f"{self.data_dir}/{src_file}"
+        src_path = os.path.join(self.data_dir, src_file)
 
         self.model.load_source_data(src_path)
 

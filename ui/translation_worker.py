@@ -11,19 +11,18 @@ class TranslationWorker(QObject):
     error = pyqtSignal(str)
     finished = pyqtSignal(bool)
 
-    def __init__(self, items, source_lang, target_lang, timeout=10):
+    def __init__(self, items, source_lang, target_lang):
         super().__init__()
         self.items = items
         self.source_lang = source_lang
         self.target_lang = target_lang
-        self.timeout = timeout
         self._cancelled = False
 
     def cancel(self):
         self._cancelled = True
 
     def run(self):
-        translator = TranslateClient(timeout=self.timeout)
+        translator = TranslateClient()
         total = len(self.items)
 
         for position, item in enumerate(self.items, start=1):

@@ -13,6 +13,7 @@ def get_base_filename(filepath: str) -> str:
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
+    relative_path = os.path.normpath(relative_path)
     if getattr(sys, 'frozen', False):
         base_path = sys._MEIPASS
     else:

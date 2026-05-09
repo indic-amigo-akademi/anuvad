@@ -3,9 +3,7 @@ from deep_translator import GoogleTranslator
 
 
 class TranslateClient:
-    def __init__(self, timeout: int = 10, throttle: int = 5):
-        self.timeout = timeout
-        self.throttle = throttle
+    def __init__(self):
         self._translators = {}
 
     # ---------------------------
@@ -23,12 +21,3 @@ class TranslateClient:
         if key not in self._translators:
             self._translators[key] = GoogleTranslator(source=source, target=target)
         return self._translators[key]
-
-
-# ---------------------------
-# 🔹 Factory
-# ---------------------------
-def create_translator(config):
-    return TranslateClient(
-        timeout=config.get_int("api", "timeout", fallback=10)
-    )

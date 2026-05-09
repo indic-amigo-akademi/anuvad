@@ -11,6 +11,8 @@ class AppConfig:
         self.filepath = resource_path(filepath)
         self.config = configparser.ConfigParser()
         self.config_dir = os.path.join(os.path.expanduser("~"), ".anuvad")
+        self._stylesheet_cache = {}
+        self._icon_cache = {}
 
         self._load()
 
@@ -126,11 +128,16 @@ class AppConfig:
         return self.get("app", "version", "1.0")
 
     def get_theme_stylesheet(self):
+        theme = self.theme
+        if theme in self._stylesheet_cache:
+            return self._stylesheet_cache[theme]
+
         stylesheet = (
-            load_qss("assets/qss/main.qss")
+            load_qss(os.path.join("assets", "qss", "main.qss"))
             + "\n"
-            + load_qss(f"assets/qss/{self.theme}.qss")
+            + load_qss(os.path.join("assets", "qss", f"{theme}.qss"))
         )
+        self._stylesheet_cache[theme] = stylesheet
         return stylesheet
 
     # ---------------------------
@@ -143,11 +150,20 @@ class AppConfig:
     def set(self, section, key, value):
         self.config.set(section, key, value)
         self.save()
+        if section == "ui":
+            self._stylesheet_cache.clear()
 
     def get_icon(self, name, color="light"):
+        cache_key = (name, color)
+        if cache_key in self._icon_cache:
+            return self._icon_cache[cache_key]
+
         icon_path = resource_path(os.path.join("assets", "icons", f"{name}.svg"))
         if os.path.exists(icon_path):
             icon = QIcon(icon_path)
             icon.setThemeName(color)
-            return icon
-        return QIcon(resource_path("assets/icons/default.svg"))
+        else:
+            icon = QIcon(resource_path(os.path.join("assets", "icons", "default.svg")))
+
+        self._icon_cache[cache_key] = icon
+        return icon

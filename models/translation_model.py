@@ -54,7 +54,7 @@ class TranslationModel:
 
     def set_target_lang(self, target_lang: str, data_dir: str = "data"):
         self.target_lang = target_lang
-        tgt_path = f"{data_dir}/{self.base_filename}.{target_lang}.abd"
+        tgt_path = os.path.join(data_dir, f"{self.base_filename}.{target_lang}.abd")
         if target_lang not in self.avl_tgt_langs:
             self.avl_tgt_langs.append(target_lang)
         # check if translation file exists

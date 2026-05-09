@@ -65,13 +65,13 @@ def is_latin(text: str) -> bool:
     return all(ord(c) < 128 for c in text)
 
 
-def is_indic(text: str) -> bool:
-    return detect_language(text) in SUPPORTED_INDIC_LANG
+def is_indic(lang: str) -> bool:
+    return lang in SUPPORTED_INDIC_LANG
 
 
 def convert_to_latin(text: str) -> str:
     lang = detect_language(text)
-    if is_indic(text):
+    if is_indic(lang):
         text = text.replace("।", ".")
         text = transliterate(
             text,

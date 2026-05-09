@@ -43,7 +43,7 @@ class EditorScreen(QWidget):
         main_layout.setSpacing(10)
 
         # Header
-        self.title = QLabel("Translation Editor")
+        self.title = QLabel()
         self.title.setObjectName("title")
         main_layout.addWidget(self.title)
 
@@ -55,8 +55,8 @@ class EditorScreen(QWidget):
         left_layout = QVBoxLayout()
         left_layout.setSpacing(5)
 
-        left_label = QLabel("Source Text")
-        left_layout.addWidget(left_label)
+        self.source_label = QLabel()
+        left_layout.addWidget(self.source_label)
 
         self.source_text = QTextEdit()
         self.source_text.setReadOnly(True)
@@ -75,8 +75,8 @@ class EditorScreen(QWidget):
         right_layout = QVBoxLayout()
         right_layout.setSpacing(5)
 
-        right_label = QLabel("Translated Text")
-        right_layout.addWidget(right_label)
+        self.translated_label = QLabel()
+        right_layout.addWidget(self.translated_label)
 
         self.translated_text = QTextEdit()
         right_layout.addWidget(self.translated_text)
@@ -105,27 +105,27 @@ class EditorScreen(QWidget):
         nav_layout = QHBoxLayout()
         nav_layout.setSpacing(10)
 
-        self.prev_btn = QPushButton("← Previous")
+        self.prev_btn = QPushButton()
         self.prev_btn.clicked.connect(self.go_previous)
 
-        self.auto_btn = QPushButton("Auto Translate")
+        self.auto_btn = QPushButton()
         self.auto_btn.setObjectName("primary")
         self.auto_btn.setIcon(
             config.get_icon("translate")
         )
         self.auto_btn.clicked.connect(self.auto_translate)
 
-        self.save_btn = QPushButton("Save")
+        self.save_btn = QPushButton()
         self.save_btn.setIcon(
             config.get_icon("save")
         )
         self.save_btn.setObjectName("accent")
         self.save_btn.clicked.connect(lambda: self.save_translation(True))
 
-        self.next_btn = QPushButton("Next →")
+        self.next_btn = QPushButton()
         self.next_btn.clicked.connect(self.go_next)
 
-        self.back_btn = QPushButton("Back")
+        self.back_btn = QPushButton()
         self.back_btn.clicked.connect(self.go_back)
 
         self.translated_text.textChanged.connect(self.handle_translation_text_changed)
@@ -141,6 +141,17 @@ class EditorScreen(QWidget):
         main_layout.addLayout(nav_layout)
 
         self.setLayout(main_layout)
+        self.retranslate_ui()
+
+    def retranslate_ui(self):
+        self.title.setText(self.config.tr("editor_title"))
+        self.source_label.setText(self.config.tr("source_text"))
+        self.translated_label.setText(self.config.tr("translated_text"))
+        self.prev_btn.setText(f"<- {self.config.tr('previous')}")
+        self.auto_btn.setText(self.config.tr("auto_translate"))
+        self.save_btn.setText(self.config.tr("save"))
+        self.next_btn.setText(f"{self.config.tr('next')} ->")
+        self.back_btn.setText(self.config.tr("back"))
 
     def set_latin_text(self, text: str, label: QLabel, lang: str | None = None):
         if is_latin(text):
@@ -179,7 +190,11 @@ class EditorScreen(QWidget):
         )
         self.current_translation_dirty = False
         if save_to_file:
-            QMessageBox.information(self, "Success", "Translation saved")
+            QMessageBox.information(
+                self,
+                self.config.tr("success"),
+                self.config.tr("translation_saved"),
+            )
 
     def save_if_dirty(self, save_to_file=False):
         if self.current_translation_dirty:
@@ -188,11 +203,19 @@ class EditorScreen(QWidget):
     def save_changes(self):
         self.save_if_dirty(save_to_file=False)
         if not self.model.target_lang:
-            QMessageBox.critical(self, "Error", "Target language not set")
+            QMessageBox.critical(
+                self,
+                self.config.tr("error"),
+                self.config.tr("target_language_not_set"),
+            )
             return
 
         self.model.save_target_file(output_dir=self.config.data_dir)
-        QMessageBox.information(self, "Success", "Translation saved")
+        QMessageBox.information(
+            self,
+            self.config.tr("success"),
+            self.config.tr("translation_saved"),
+        )
 
     # ---------------------------
     # 🔹 Auto Translate
@@ -204,21 +227,29 @@ class EditorScreen(QWidget):
         current_id = self.model.get_current_id()
 
         if not tgt_lang:
-            QMessageBox.critical(self, "Error", "Target language not set")
+            QMessageBox.critical(
+                self,
+                self.config.tr("error"),
+                self.config.tr("target_language_not_set"),
+            )
             return
 
         if current_id is None:
             return
 
         if self.translation_thread and self.translation_thread.isRunning():
-            QMessageBox.information(self, "Translation Running", "Please wait for the current translation to finish.")
+            QMessageBox.information(
+                self,
+                self.config.tr("translation_running"),
+                self.config.tr("translation_running_message"),
+            )
             return
 
         self.translation_failed = False
         self.set_translation_controls_enabled(False)
         self.translation_progress = QProgressDialog(
-            "Translating current item...",
-            "Cancel",
+            self.config.tr("translating_current_item"),
+            self.config.tr("cancel"),
             0,
             1,
             self,
@@ -257,7 +288,9 @@ class EditorScreen(QWidget):
             return
 
         self.translation_progress.setMaximum(total)
-        self.translation_progress.setLabelText(f"Translating item #{idx}...")
+        self.translation_progress.setLabelText(
+            self.config.tr("translating_item", idx=idx)
+        )
         self.translation_progress.setValue(position - 1)
 
     def handle_item_translated(self, idx, translated):
@@ -266,7 +299,7 @@ class EditorScreen(QWidget):
 
     def handle_translation_error(self, message):
         self.translation_failed = True
-        QMessageBox.critical(self, "Error", message)
+        QMessageBox.critical(self, self.config.tr("error"), message)
 
     def handle_translation_finished(self, cancelled):
         if self.translation_progress:
@@ -279,7 +312,11 @@ class EditorScreen(QWidget):
         self.translation_thread = None
 
         if cancelled and not self.translation_failed:
-            QMessageBox.information(self, "Translation Stopped", "Translation was cancelled.")
+            QMessageBox.information(
+                self,
+                self.config.tr("translation_stopped"),
+                self.config.tr("translation_was_cancelled"),
+            )
 
         self.translation_failed = False
 

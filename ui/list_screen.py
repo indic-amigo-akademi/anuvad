@@ -32,9 +32,10 @@ from ui.translation_worker import TranslationWorker
 
 
 class TranslationTableModel(QAbstractTableModel):
-    def __init__(self, translation_model: TranslationModel):
+    def __init__(self, translation_model: TranslationModel, config: AppConfig):
         super().__init__()
         self.translation_model = translation_model
+        self.config = config
 
     def rowCount(self, parent=None):
         if parent is not None and parent.isValid():
@@ -83,10 +84,10 @@ class TranslationTableModel(QAbstractTableModel):
             return "#"
 
         if section == 1:
-            return f"Source ({self.translation_model.src_lang})"
+            return f"{self.config.tr('source')} ({self.translation_model.src_lang})"
 
         if section == 2:
-            return f"Translation ({self.translation_model.target_lang})"
+            return f"{self.config.tr('translation')} ({self.translation_model.target_lang})"
 
         return None
 
@@ -151,7 +152,7 @@ class ListScreen(QWidget):
         # ---------------------------
         header_layout = QHBoxLayout()
 
-        self.title = QLabel("Text Segments")
+        self.title = QLabel()
         self.title.setObjectName("title")
 
         self.lang_dropdown = QComboBox()
@@ -159,7 +160,8 @@ class ListScreen(QWidget):
 
         header_layout.addWidget(self.title)
         header_layout.addStretch()
-        header_layout.addWidget(QLabel("Target Language:"))
+        self.target_language_label = QLabel()
+        header_layout.addWidget(self.target_language_label)
         header_layout.addWidget(self.lang_dropdown)
 
         layout.addLayout(header_layout)
@@ -170,13 +172,13 @@ class ListScreen(QWidget):
         search_layout = QHBoxLayout()
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search source or translation...")
         self.search_input.textChanged.connect(self.schedule_search)
 
-        self.clear_search_btn = QPushButton("Clear")
+        self.clear_search_btn = QPushButton()
         self.clear_search_btn.clicked.connect(self.clear_search)
 
-        search_layout.addWidget(QLabel("Search:"))
+        self.search_label = QLabel()
+        search_layout.addWidget(self.search_label)
         search_layout.addWidget(self.search_input, stretch=1)
         search_layout.addWidget(self.clear_search_btn)
 
@@ -185,7 +187,7 @@ class ListScreen(QWidget):
         # ---------------------------
         # 🔹 Table (2 columns)
         # ---------------------------
-        self.table_model = TranslationTableModel(self.model)
+        self.table_model = TranslationTableModel(self.model, self.config)
         self.filter_model = TranslationFilterProxyModel()
         self.filter_model.setSourceModel(self.table_model)
 
@@ -205,10 +207,10 @@ class ListScreen(QWidget):
         # ---------------------------
         bottom_layout = QHBoxLayout()
 
-        self.progress_label = QLabel("Show Progress")
+        self.progress_label = QLabel()
         # self.progress_btn.clicked.connect(self.show_progress)
 
-        self.open_btn = QPushButton("Open Selected")
+        self.open_btn = QPushButton()
         self.open_btn.clicked.connect(self.open_selected)
 
         bottom_layout.addWidget(self.progress_label)
@@ -218,6 +220,17 @@ class ListScreen(QWidget):
         layout.addLayout(bottom_layout)
 
         self.setLayout(layout)
+        self.retranslate_ui()
+
+    def retranslate_ui(self):
+        self.title.setText(self.config.tr("text_segments"))
+        self.target_language_label.setText(self.config.tr("target_language"))
+        self.search_label.setText(self.config.tr("search"))
+        self.search_input.setPlaceholderText(self.config.tr("search_placeholder"))
+        self.clear_search_btn.setText(self.config.tr("clear"))
+        self.open_btn.setText(self.config.tr("open_selected"))
+        self.table_model.headerDataChanged.emit(Qt.Horizontal, 0, 2)
+        self.show_progress()
 
     # ---------------------------
     # 🔹 Refresh UI
@@ -348,12 +361,22 @@ class ListScreen(QWidget):
             return
 
         count = len(selected_rows)
-        suffix = "Item" if count == 1 else f"{count} Items"
+        suffix = (
+            self.config.tr("item")
+            if count == 1
+            else self.config.tr("items", count=count)
+        )
 
         menu = QMenu(self)
-        clean_action = menu.addAction(f"Clean Translation for {suffix}")
-        translate_action = menu.addAction(f"Auto-Translate {suffix}")
-        clean_translate_action = menu.addAction(f"Clean and Auto-Translate {suffix}")
+        clean_action = menu.addAction(
+            self.config.tr("clean_translation_items", suffix=suffix)
+        )
+        translate_action = menu.addAction(
+            self.config.tr("auto_translate_items", suffix=suffix)
+        )
+        clean_translate_action = menu.addAction(
+            self.config.tr("clean_and_auto_translate_items", suffix=suffix)
+        )
 
         action = menu.exec_(self.table.viewport().mapToGlobal(position))
 
@@ -379,17 +402,29 @@ class ListScreen(QWidget):
 
     def save_changes(self):
         if not self.model.target_lang:
-            QMessageBox.critical(self, "Error", "Target language not set")
+            QMessageBox.critical(
+                self,
+                self.config.tr("error"),
+                self.config.tr("target_language_not_set"),
+            )
             return
 
         if not self.model.has_unsaved_changes:
-            QMessageBox.information(self, "No Changes", "There are no unsaved translation changes.")
+            QMessageBox.information(
+                self,
+                self.config.tr("no_changes"),
+                self.config.tr("no_unsaved_changes"),
+            )
             return
 
         self.model.save_target_file(output_dir=self.config.data_dir)
         self.populate_table()
         self.show_progress()
-        QMessageBox.information(self, "Success", "Translation saved")
+        QMessageBox.information(
+            self,
+            self.config.tr("success"),
+            self.config.tr("translation_saved"),
+        )
 
     def auto_translate_selected(self, clean_first=False):
         rows = self.selected_rows()
@@ -397,11 +432,19 @@ class ListScreen(QWidget):
             return
 
         if not self.model.target_lang:
-            QMessageBox.critical(self, "Error", "Target language not set")
+            QMessageBox.critical(
+                self,
+                self.config.tr("error"),
+                self.config.tr("target_language_not_set"),
+            )
             return
 
         if self.translation_thread and self.translation_thread.isRunning():
-            QMessageBox.information(self, "Translation Running", "Please wait for the current translation to finish.")
+            QMessageBox.information(
+                self,
+                self.config.tr("translation_running"),
+                self.config.tr("translation_running_message"),
+            )
             return
 
         items = []
@@ -415,8 +458,8 @@ class ListScreen(QWidget):
         self.translation_failed = False
         self.translation_dirty = clean_first
         self.translation_progress = QProgressDialog(
-            "Translating selected items...",
-            "Cancel",
+            self.config.tr("translating_selected_items"),
+            self.config.tr("cancel"),
             0,
             len(items),
             self,
@@ -449,7 +492,9 @@ class ListScreen(QWidget):
             return
 
         self.translation_progress.setMaximum(total)
-        self.translation_progress.setLabelText(f"Translating item #{idx}...")
+        self.translation_progress.setLabelText(
+            self.config.tr("translating_item", idx=idx)
+        )
         self.translation_progress.setValue(position - 1)
 
     def handle_item_translated(self, idx, translated):
@@ -458,7 +503,7 @@ class ListScreen(QWidget):
 
     def handle_translation_error(self, message):
         self.translation_failed = True
-        QMessageBox.critical(self, "Error", message)
+        QMessageBox.critical(self, self.config.tr("error"), message)
 
     def handle_translation_finished(self, cancelled):
         if self.translation_progress:
@@ -477,7 +522,11 @@ class ListScreen(QWidget):
         self.translation_dirty = False
 
         if cancelled and not self.translation_failed:
-            QMessageBox.information(self, "Translation Stopped", "Translation was cancelled.")
+            QMessageBox.information(
+                self,
+                self.config.tr("translation_stopped"),
+                self.config.tr("translation_was_cancelled"),
+            )
 
         self.translation_failed = False
 

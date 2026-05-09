@@ -24,15 +24,19 @@ class DividerWidget(QWidget):
         right.setObjectName("line")
         right.setFrameShape(QFrame.HLine)
         right.setFrameShadow(QFrame.Sunken)
-        label = QLabel(text)
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        label.setStyleSheet("padding: 0 8px;")
-        label.setFixedWidth(len(text) * 18)
+        self.label = QLabel(text)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label.setStyleSheet("padding: 0 8px;")
+        self.label.setFixedWidth(max(40, len(text) * 18))
         h.addWidget(left)
-        h.addWidget(label)
+        h.addWidget(self.label)
         h.addWidget(right)
         h.setContentsMargins(0, 0, 0, 0)
         h.setSpacing(6)
+
+    def setText(self, text):
+        self.label.setText(text)
+        self.label.setFixedWidth(max(40, len(text) * 18))
 
 
 class ComboInputDialog(QDialog):

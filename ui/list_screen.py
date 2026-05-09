@@ -4,8 +4,7 @@ from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QTableWidget,
-    QTableWidgetItem,
+    QTableView,
     QPushButton,
     QLabel,
     QComboBox,
@@ -15,7 +14,14 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QProgressDialog,
 )
-from PyQt5.QtCore import pyqtSignal, Qt, QThread, QTimer
+from PyQt5.QtCore import (
+    pyqtSignal,
+    Qt,
+    QThread,
+    QTimer,
+    QAbstractTableModel,
+    QSortFilterProxyModel,
+)
 from PyQt5.QtGui import QColor
 
 from models.translation_model import TranslationModel
@@ -23,6 +29,99 @@ from core.config import AppConfig
 
 from core.language import SUPPORTED_LANGUAGES
 from ui.translation_worker import TranslationWorker
+
+
+class TranslationTableModel(QAbstractTableModel):
+    def __init__(self, translation_model: TranslationModel):
+        super().__init__()
+        self.translation_model = translation_model
+
+    def rowCount(self, parent=None):
+        if parent is not None and parent.isValid():
+            return 0
+        return len(self.translation_model.source_data)
+
+    def columnCount(self, parent=None):
+        if parent is not None and parent.isValid():
+            return 0
+        return 3
+
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return None
+
+        row = index.row()
+        if row < 0 or row >= len(self.translation_model.source_data):
+            return None
+
+        idx, source_text = self.translation_model.source_data[row]
+        translated = self.translation_model.get_translation(idx) or ""
+
+        if role == Qt.DisplayRole:
+            if index.column() == 0:
+                return str(idx)
+            if index.column() == 1:
+                return source_text
+            return translated
+
+        if role == Qt.UserRole:
+            return row
+
+        if role == Qt.BackgroundRole and index.column() == 2 and translated.strip():
+            return QColor("lightgreen")
+
+        if role == Qt.ForegroundRole and index.column() == 2 and translated.strip():
+            return QColor("black")
+
+        return None
+
+    def headerData(self, section, orientation, role=Qt.DisplayRole):
+        if role != Qt.DisplayRole or orientation != Qt.Horizontal:
+            return None
+
+        if section == 0:
+            return "#"
+
+        if section == 1:
+            return f"Source ({self.translation_model.src_lang})"
+
+        if section == 2:
+            return f"Translation ({self.translation_model.target_lang})"
+
+        return None
+
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.NoItemFlags
+        return Qt.ItemIsSelectable | Qt.ItemIsEnabled
+
+    def refresh(self):
+        self.beginResetModel()
+        self.endResetModel()
+
+
+class TranslationFilterProxyModel(QSortFilterProxyModel):
+    def __init__(self):
+        super().__init__()
+        self.search_text = ""
+
+    def set_search_text(self, text):
+        self.search_text = text.strip().lower()
+        self.invalidateFilter()
+
+    def filterAcceptsRow(self, source_row, source_parent):
+        if not self.search_text:
+            return True
+
+        source_index = self.sourceModel().index(source_row, 1, source_parent)
+        target_index = self.sourceModel().index(source_row, 2, source_parent)
+        source_text = source_index.data(Qt.DisplayRole) or ""
+        translated = target_index.data(Qt.DisplayRole) or ""
+
+        return (
+            self.search_text in source_text.lower()
+            or self.search_text in translated.lower()
+        )
 
 
 class ListScreen(QWidget):
@@ -41,7 +140,7 @@ class ListScreen(QWidget):
         self.search_timer = QTimer(self)
         self.search_timer.setSingleShot(True)
         self.search_timer.setInterval(200)
-        self.search_timer.timeout.connect(self.populate_table)
+        self.search_timer.timeout.connect(self.apply_search)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(20, 20, 20, 20)
@@ -86,14 +185,17 @@ class ListScreen(QWidget):
         # ---------------------------
         # 🔹 Table (2 columns)
         # ---------------------------
-        self.table = QTableWidget()
-        self.table.setColumnCount(2)
-        self.table.setHorizontalHeaderLabels([f"Source", f"Translation"])
+        self.table_model = TranslationTableModel(self.model)
+        self.filter_model = TranslationFilterProxyModel()
+        self.filter_model.setSourceModel(self.table_model)
+
+        self.table = QTableView()
+        self.table.setModel(self.filter_model)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setSelectionBehavior(self.table.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.table.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.table.cellDoubleClicked.connect(self.handle_double_click)
+        self.table.doubleClicked.connect(self.handle_double_click)
         self.table.customContextMenuRequested.connect(self.show_context_menu)
 
         layout.addWidget(self.table, stretch=1)
@@ -121,7 +223,6 @@ class ListScreen(QWidget):
     # 🔹 Refresh UI
     # ---------------------------
     def refresh(self):        
-        self.table.setHorizontalHeaderLabels([f"Source ({self.model.src_lang})", f"Translation ({self.model.target_lang})"])
         self.populate_language_dropdown()
         self.populate_table()
         self.show_progress()
@@ -163,7 +264,6 @@ class ListScreen(QWidget):
         lang = self.lang_dropdown.currentData()
         if lang:
             self.model.set_target_lang(lang, data_dir=self.config.data_dir)
-            self.table.setHorizontalHeaderLabels([f"Source ({self.model.src_lang})", f"Translation ({self.model.target_lang})"])
             self.populate_table()
 
     def resize_columns_equally(self):
@@ -172,10 +272,12 @@ class ListScreen(QWidget):
             return
 
         total_width = viewport.width()
-        col_width = total_width // 2
+        index_width = min(90, max(60, total_width // 10))
+        text_width = (total_width - index_width) // 2
 
-        self.table.setColumnWidth(0, col_width)
-        self.table.setColumnWidth(1, col_width)
+        self.table.setColumnWidth(0, index_width)
+        self.table.setColumnWidth(1, text_width)
+        self.table.setColumnWidth(2, text_width)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -185,42 +287,8 @@ class ListScreen(QWidget):
     # 🔹 Table Population
     # ---------------------------
     def populate_table(self):
-        data = self.model.source_data
-        search_text = self.search_input.text().strip().lower()
-        filtered_data = []
-
-        for model_row, (idx, source_text) in enumerate(data):
-            translated = self.model.get_translation(idx)
-            if search_text and (
-                search_text not in source_text.lower()
-                and search_text not in translated.lower()
-            ):
-                continue
-
-            filtered_data.append((model_row, idx, source_text, translated))
-
-        self.table.setRowCount(len(filtered_data))
-
-        for row, (model_row, idx, source_text, translated) in enumerate(filtered_data):
-            # Source column
-            src_item = QTableWidgetItem(source_text)
-            src_item.setData(Qt.UserRole, model_row)
-            src_item.setFlags(
-                Qt.ItemFlags(src_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            )
-
-            # Target column
-            tgt_item = QTableWidgetItem(translated)
-            tgt_item.setData(Qt.UserRole, model_row)
-
-            # Optional: highlight translated rows
-            if translated.strip():
-                tgt_item.setBackground(QColor("lightgreen"))
-                tgt_item.setForeground(QColor("black"))
-
-            self.table.setItem(row, 0, src_item)
-            self.table.setItem(row, 1, tgt_item)
-
+        self.table_model.refresh()
+        self.apply_search()
         self.resize_columns_equally()
 
     # ---------------------------
@@ -229,16 +297,19 @@ class ListScreen(QWidget):
     def schedule_search(self):
         self.search_timer.start()
 
+    def apply_search(self):
+        self.filter_model.set_search_text(self.search_input.text())
+
     def clear_search(self):
         self.search_input.clear()
         self.search_timer.stop()
-        self.populate_table()
+        self.apply_search()
 
     def table_row_to_model_row(self, table_row):
-        item = self.table.item(table_row, 0)
-        if not item:
+        index = self.filter_model.index(table_row, 0)
+        if not index.isValid():
             return None
-        return item.data(Qt.UserRole)
+        return index.data(Qt.UserRole)
 
     def selected_rows(self):
         rows = set()
@@ -250,7 +321,8 @@ class ListScreen(QWidget):
                 if model_row is not None:
                     rows.add(model_row)
 
-        current_row = self.table.currentRow()
+        current_index = self.table.currentIndex()
+        current_row = current_index.row()
 
         if not rows and current_row >= 0:
             model_row = self.table_row_to_model_row(current_row)
@@ -304,6 +376,20 @@ class ListScreen(QWidget):
         self.model.save_target_file(output_dir=self.config.data_dir)
         self.populate_table()
         self.show_progress()
+
+    def save_changes(self):
+        if not self.model.target_lang:
+            QMessageBox.critical(self, "Error", "Target language not set")
+            return
+
+        if not self.model.has_unsaved_changes:
+            QMessageBox.information(self, "No Changes", "There are no unsaved translation changes.")
+            return
+
+        self.model.save_target_file(output_dir=self.config.data_dir)
+        self.populate_table()
+        self.show_progress()
+        QMessageBox.information(self, "Success", "Translation saved")
 
     def auto_translate_selected(self, clean_first=False):
         rows = self.selected_rows()
@@ -398,14 +484,14 @@ class ListScreen(QWidget):
         self.translation_failed = False
 
     def open_selected(self):
-        row = self.table.currentRow()
-        if row >= 0:
-            model_row = self.table_row_to_model_row(row)
+        current_index = self.table.currentIndex()
+        if current_index.isValid():
+            model_row = current_index.data(Qt.UserRole)
             if model_row is not None:
                 self.open_editor.emit(model_row)
 
-    def handle_double_click(self, row, col):
-        model_row = self.table_row_to_model_row(row)
+    def handle_double_click(self, index):
+        model_row = index.data(Qt.UserRole)
         if model_row is not None:
             self.open_editor.emit(model_row)
 

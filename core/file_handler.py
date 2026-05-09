@@ -150,3 +150,28 @@ def read_abd_file(filepath):
         data.append((current_id, "\n".join(buffer).strip()))
 
     return metadata, data
+
+
+def read_abd_metadata(filepath):
+    """
+    Reads only the metadata block from an ABD file.
+    Stops before segment content so project listing/opening stays lightweight.
+    """
+    metadata = {}
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        first_line = f.readline()
+        if not first_line.startswith("# --- ANUVAD METADATA ---"):
+            return metadata
+
+        for line in f:
+            if line.startswith("# --- END METADATA ---"):
+                break
+
+            if ":" not in line:
+                continue
+
+            key, value = line.split(":", 1)
+            metadata[key.strip()] = value.strip()
+
+    return metadata

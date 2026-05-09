@@ -1,6 +1,4 @@
 # core/translator.py
-from typing import Dict, List
-import requests
 from deep_translator import GoogleTranslator
 
 
@@ -8,7 +6,7 @@ class TranslateClient:
     def __init__(self, timeout: int = 10, throttle: int = 5):
         self.timeout = timeout
         self.throttle = throttle
-        pass
+        self._translators = {}
 
     # ---------------------------
     # 🔹 Single Translation
@@ -17,9 +15,14 @@ class TranslateClient:
         if not text.strip():
             return ""
 
-        self.translator = GoogleTranslator(source=source, target=target)
+        translator = self.get_translator(source, target)
+        return translator.translate(text)
 
-        return self.translator.translate(text)
+    def get_translator(self, source: str, target: str):
+        key = (source, target)
+        if key not in self._translators:
+            self._translators[key] = GoogleTranslator(source=source, target=target)
+        return self._translators[key]
 
 
 # ---------------------------

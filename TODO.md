@@ -3,38 +3,38 @@
 ## High Priority
 
 - [x] Move auto-translation off the UI thread with `QThread` or `QRunnable`.
-  - Applies to bulk translation in `ui/list_screen.py`.
-  - Applies to single-item translation in `ui/editor_screen.py`.
-  - Emit progress, completion, cancellation, and error signals back to the UI.
+    - Applies to bulk translation in `ui/list_screen.py`.
+    - Applies to single-item translation in `ui/editor_screen.py`.
+    - Emit progress, completion, cancellation, and error signals back to the UI.
 
 - [x] Debounce list search input.
     - Use a short `QTimer` delay, around 150-250ms.
     - Avoid rebuilding the table on every keystroke.
 
-- [ ] Fix translated-count logic in `models/translation_model.py`.
+- [x] Fix translated-count logic in `models/translation_model.py`.
     - `None` should not count as translated.
     - Expected check: value exists and `value.strip() != ""`.
 
-- [ ] Cache translator instances in `core/translator.py`.
+- [x] Cache translator instances in `core/translator.py`.
     - Reuse `GoogleTranslator` per `(source, target)` pair.
     - Avoid recreating the translator for every segment during bulk translation.
 
 ## Medium Priority
 
-- [ ] Replace `QTableWidget` with `QTableView` plus `QAbstractTableModel`.
+- [x] Replace `QTableWidget` with `QTableView` plus `QAbstractTableModel`.
     - Add `QSortFilterProxyModel` for efficient search/filtering.
     - This will scale better for large projects.
 
-- [ ] Add metadata-only ABD reading.
+- [x] Add metadata-only ABD reading.
     - Create `read_abd_metadata(filepath)` in `core/file_handler.py`.
     - Use it in `ui/upload_screen.py` when listing/opening projects.
     - Avoid parsing full segment content when only metadata is needed.
 
-- [ ] Fix available target language tracking in `ui/upload_screen.py`.
+- [x] Fix available target language tracking in `ui/upload_screen.py`.
     - Use `extend(...)` instead of appending a list into `model.avl_tgt_langs`.
     - Keep `avl_tgt_langs` as a flat list of language codes.
 
-- [ ] Improve save and dirty-state behavior.
+- [x] Improve save and dirty-state behavior.
     - Track whether editor/list translations have unsaved changes.
     - Make `Ctrl+S` save the active screen's current data intentionally.
     - Avoid surprising saves from the wrong screen.

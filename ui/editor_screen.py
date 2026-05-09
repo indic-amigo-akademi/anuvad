@@ -29,6 +29,8 @@ class EditorScreen(QWidget):
         self.translation_worker = None
         self.translation_progress = None
         self.translation_failed = False
+        self.current_translation_dirty = False
+        self.loading_current = False
 
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(15, 15, 15, 15)
@@ -114,9 +116,9 @@ class EditorScreen(QWidget):
         self.next_btn.clicked.connect(self.go_next)
 
         self.back_btn = QPushButton("Back")
-        self.back_btn.clicked.connect(self.back_to_list.emit)
+        self.back_btn.clicked.connect(self.go_back)
 
-        self.translated_text.textChanged.connect(lambda: self.set_latin_text(self.translated_text.toPlainText(), self.translated_text_roman))
+        self.translated_text.textChanged.connect(self.handle_translation_text_changed)
         self.source_text.textChanged.connect(lambda: self.set_latin_text(self.source_text.toPlainText(), self.source_text_roman))
 
         nav_layout.addWidget(self.prev_btn)
@@ -140,8 +142,16 @@ class EditorScreen(QWidget):
     # 🔹 Load Data
     # ---------------------------
     def load_current(self):
+        self.loading_current = True
         self.source_text.setText(self.model.get_current_source_text())
         self.translated_text.setText(self.model.get_current_translation())
+        self.current_translation_dirty = False
+        self.loading_current = False
+
+    def handle_translation_text_changed(self):
+        self.set_latin_text(self.translated_text.toPlainText(), self.translated_text_roman)
+        if not self.loading_current:
+            self.current_translation_dirty = True
 
     # ---------------------------
     # 🔹 Save
@@ -150,8 +160,22 @@ class EditorScreen(QWidget):
         self.model.save_current_translation(
             self.translated_text.toPlainText(), save_to_file=save_to_file
         )
+        self.current_translation_dirty = False
         if save_to_file:
             QMessageBox.information(self, "Success", "Translation saved")
+
+    def save_if_dirty(self, save_to_file=False):
+        if self.current_translation_dirty:
+            self.save_translation(save_to_file=save_to_file)
+
+    def save_changes(self):
+        self.save_if_dirty(save_to_file=False)
+        if not self.model.target_lang:
+            QMessageBox.critical(self, "Error", "Target language not set")
+            return
+
+        self.model.save_target_file(output_dir=self.config.data_dir)
+        QMessageBox.information(self, "Success", "Translation saved")
 
     # ---------------------------
     # 🔹 Auto Translate
@@ -248,13 +272,17 @@ class EditorScreen(QWidget):
     # 🔹 Navigation
     # ---------------------------
     def go_next(self):
-        self.save_translation(save_to_file=False)
+        self.save_if_dirty(save_to_file=False)
         if self.model.has_next():
             self.model.next()
             self.load_current()
 
     def go_previous(self):
-        self.save_translation(save_to_file=False)
+        self.save_if_dirty(save_to_file=False)
         if self.model.has_previous():
             self.model.previous()
             self.load_current()
+
+    def go_back(self):
+        self.save_if_dirty(save_to_file=False)
+        self.back_to_list.emit()

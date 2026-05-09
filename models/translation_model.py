@@ -50,6 +50,7 @@ class TranslationModel:
         self.created_at = None
         self.last_modified = None
         self.avl_tgt_langs = []
+        self.has_unsaved_changes = False
 
     def set_target_lang(self, target_lang: str, data_dir: str = "data"):
         self.target_lang = target_lang
@@ -76,6 +77,7 @@ class TranslationModel:
 
         # Reset translations when new file is loaded
         self.translations = {}
+        self.has_unsaved_changes = False
 
     def load_source_data(self, filepath: str, src_lang: str = "en"):
         """
@@ -92,6 +94,7 @@ class TranslationModel:
 
         # Reset translations when new file is loaded
         self.translations = {}
+        self.has_unsaved_changes = False
 
     def load_target_data(self, filepath: str, target_lang: str = "en"):
         """
@@ -107,6 +110,7 @@ class TranslationModel:
         self.current_index = 0
         self.created_at = metadata.get("created_at")
         self.last_modified = metadata.get("last_modified")
+        self.has_unsaved_changes = False
 
     # ---------------------------
     # 🔹 GETTERS
@@ -171,6 +175,7 @@ class TranslationModel:
         idx = self.get_current_id()
         if idx is not None:
             self.translations[idx] = text.strip()
+            self.has_unsaved_changes = True
 
         output_dir = self.config.data_dir
         if output_dir is None:
@@ -187,7 +192,7 @@ class TranslationModel:
     # ---------------------------
     def translated_count(self) -> int:
         return sum(
-            1 for x in self.translations.values() if x is None or x.strip() != ""
+            1 for x in self.translations.values() if x is not None and x.strip() != ""
         )
 
     def completion_percentage(self) -> float:
@@ -200,7 +205,9 @@ class TranslationModel:
         return [
             idx
             for idx, _ in self.source_data
-            if idx not in self.translations or not self.translations[idx].strip()
+            if idx not in self.translations
+            or self.translations[idx] is None
+            or not self.translations[idx].strip()
         ]
 
     # ---------------------------
@@ -223,6 +230,7 @@ class TranslationModel:
             metadata=self.metadata,
             output_dir=output_dir,
         )
+        self.has_unsaved_changes = False
 
     # ---------------------------
     # 🔹 BULK OPERATIONS
@@ -233,6 +241,7 @@ class TranslationModel:
         """
         for idx, text in translations.items():
             self.translations[idx] = text.strip()
+        self.has_unsaved_changes = True
 
     # ---------------------------
     # 🔹 VALIDATION

@@ -9,19 +9,20 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QLabel,
     QComboBox,
+    QLineEdit,
     QAbstractItemView,
     QMenu,
     QMessageBox,
     QProgressDialog,
 )
-from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtCore import pyqtSignal, Qt, QThread, QTimer
 from PyQt5.QtGui import QColor
 
 from models.translation_model import TranslationModel
 from core.config import AppConfig
 
 from core.language import SUPPORTED_LANGUAGES
-from core.translator import create_translator
+from ui.translation_worker import TranslationWorker
 
 
 class ListScreen(QWidget):
@@ -31,7 +32,16 @@ class ListScreen(QWidget):
         super().__init__()
         self.model = model
         self.config = config
-        self.translator = create_translator(config) if config else None
+        self.translation_thread = None
+        self.translation_worker = None
+        self.translation_progress = None
+        self.translation_updated = 0
+        self.translation_failed = False
+        self.translation_dirty = False
+        self.search_timer = QTimer(self)
+        self.search_timer.setSingleShot(True)
+        self.search_timer.setInterval(200)
+        self.search_timer.timeout.connect(self.populate_table)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(20, 20, 20, 20)
@@ -54,6 +64,24 @@ class ListScreen(QWidget):
         header_layout.addWidget(self.lang_dropdown)
 
         layout.addLayout(header_layout)
+
+        # ---------------------------
+        # 🔹 Search Row
+        # ---------------------------
+        search_layout = QHBoxLayout()
+
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Search source or translation...")
+        self.search_input.textChanged.connect(self.schedule_search)
+
+        self.clear_search_btn = QPushButton("Clear")
+        self.clear_search_btn.clicked.connect(self.clear_search)
+
+        search_layout.addWidget(QLabel("Search:"))
+        search_layout.addWidget(self.search_input, stretch=1)
+        search_layout.addWidget(self.clear_search_btn)
+
+        layout.addLayout(search_layout)
 
         # ---------------------------
         # 🔹 Table (2 columns)
@@ -158,18 +186,32 @@ class ListScreen(QWidget):
     # ---------------------------
     def populate_table(self):
         data = self.model.source_data
-        self.table.setRowCount(len(data))
+        search_text = self.search_input.text().strip().lower()
+        filtered_data = []
 
-        for row, (idx, source_text) in enumerate(data):
+        for model_row, (idx, source_text) in enumerate(data):
+            translated = self.model.get_translation(idx)
+            if search_text and (
+                search_text not in source_text.lower()
+                and search_text not in translated.lower()
+            ):
+                continue
+
+            filtered_data.append((model_row, idx, source_text, translated))
+
+        self.table.setRowCount(len(filtered_data))
+
+        for row, (model_row, idx, source_text, translated) in enumerate(filtered_data):
             # Source column
             src_item = QTableWidgetItem(source_text)
+            src_item.setData(Qt.UserRole, model_row)
             src_item.setFlags(
                 Qt.ItemFlags(src_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             )
 
             # Target column
-            translated = self.model.get_translation(idx)
             tgt_item = QTableWidgetItem(translated)
+            tgt_item.setData(Qt.UserRole, model_row)
 
             # Optional: highlight translated rows
             if translated.strip():
@@ -184,12 +226,36 @@ class ListScreen(QWidget):
     # ---------------------------
     # 🔹 Actions
     # ---------------------------
+    def schedule_search(self):
+        self.search_timer.start()
+
+    def clear_search(self):
+        self.search_input.clear()
+        self.search_timer.stop()
+        self.populate_table()
+
+    def table_row_to_model_row(self, table_row):
+        item = self.table.item(table_row, 0)
+        if not item:
+            return None
+        return item.data(Qt.UserRole)
+
     def selected_rows(self):
-        rows = {index.row() for index in self.table.selectionModel().selectedRows()}
+        rows = set()
+        selection_model = self.table.selectionModel()
+
+        if selection_model:
+            for index in selection_model.selectedRows():
+                model_row = self.table_row_to_model_row(index.row())
+                if model_row is not None:
+                    rows.add(model_row)
+
         current_row = self.table.currentRow()
 
         if not rows and current_row >= 0:
-            rows.add(current_row)
+            model_row = self.table_row_to_model_row(current_row)
+            if model_row is not None:
+                rows.add(model_row)
 
         return sorted(rows)
 
@@ -244,63 +310,104 @@ class ListScreen(QWidget):
         if not rows:
             return
 
-        if not self.translator:
-            QMessageBox.critical(self, "Error", "Translator not configured")
-            return
-
         if not self.model.target_lang:
             QMessageBox.critical(self, "Error", "Target language not set")
             return
 
-        progress = QProgressDialog(
+        if self.translation_thread and self.translation_thread.isRunning():
+            QMessageBox.information(self, "Translation Running", "Please wait for the current translation to finish.")
+            return
+
+        items = []
+        for row in rows:
+            idx, source_text = self.model.get_item_by_index(row)
+            if clean_first:
+                self.model.translations[idx] = ""
+            items.append((idx, source_text))
+
+        self.translation_updated = 0
+        self.translation_failed = False
+        self.translation_dirty = clean_first
+        self.translation_progress = QProgressDialog(
             "Translating selected items...",
             "Cancel",
             0,
-            len(rows),
+            len(items),
             self,
         )
-        progress.setWindowModality(Qt.WindowModal)
-        progress.setMinimumDuration(0)
+        self.translation_progress.setWindowModality(Qt.WindowModal)
+        self.translation_progress.setMinimumDuration(0)
 
-        updated = 0
+        timeout = self.config.get_int("api", "timeout", fallback=10)
+        self.translation_thread = QThread(self)
+        self.translation_worker = TranslationWorker(
+            items,
+            self.model.src_lang,
+            self.model.target_lang,
+            timeout=timeout,
+        )
+        self.translation_worker.moveToThread(self.translation_thread)
 
-        try:
-            for position, row in enumerate(rows, start=1):
-                if progress.wasCanceled():
-                    break
+        self.translation_thread.started.connect(self.translation_worker.run)
+        self.translation_worker.progress.connect(self.handle_translation_progress)
+        self.translation_worker.item_translated.connect(self.handle_item_translated)
+        self.translation_worker.error.connect(self.handle_translation_error)
+        self.translation_worker.finished.connect(self.handle_translation_finished)
+        self.translation_worker.finished.connect(self.translation_thread.quit)
+        self.translation_worker.finished.connect(self.translation_worker.deleteLater)
+        self.translation_thread.finished.connect(self.translation_thread.deleteLater)
+        self.translation_progress.canceled.connect(self.translation_worker.cancel)
 
-                idx, source_text = self.model.get_item_by_index(row)
-                progress.setLabelText(f"Translating item #{idx}...")
+        self.translation_thread.start()
 
-                if clean_first:
-                    self.model.translations[idx] = ""
+    def handle_translation_progress(self, position, total, idx):
+        if not self.translation_progress:
+            return
 
-                translated = self.translator.translate(
-                    source_text,
-                    self.model.src_lang,
-                    self.model.target_lang,
-                )
-                self.model.translations[idx] = translated.strip()
-                updated += 1
-                progress.setValue(position)
+        self.translation_progress.setMaximum(total)
+        self.translation_progress.setLabelText(f"Translating item #{idx}...")
+        self.translation_progress.setValue(position - 1)
 
-            if updated:
-                self.model.save_target_file(output_dir=self.config.data_dir)
-                self.populate_table()
-                self.show_progress()
+    def handle_item_translated(self, idx, translated):
+        self.model.translations[idx] = translated.strip()
+        self.translation_updated += 1
 
-        except Exception as e:
-            QMessageBox.critical(self, "Error", str(e))
-        finally:
-            progress.close()
+    def handle_translation_error(self, message):
+        self.translation_failed = True
+        QMessageBox.critical(self, "Error", message)
+
+    def handle_translation_finished(self, cancelled):
+        if self.translation_progress:
+            self.translation_progress.setValue(self.translation_progress.maximum())
+            self.translation_progress.close()
+            self.translation_progress = None
+
+        if self.translation_updated or self.translation_dirty:
+            self.model.save_target_file(output_dir=self.config.data_dir)
+            self.populate_table()
+            self.show_progress()
+
+        self.translation_worker = None
+        self.translation_thread = None
+        self.translation_updated = 0
+        self.translation_dirty = False
+
+        if cancelled and not self.translation_failed:
+            QMessageBox.information(self, "Translation Stopped", "Translation was cancelled.")
+
+        self.translation_failed = False
 
     def open_selected(self):
         row = self.table.currentRow()
         if row >= 0:
-            self.open_editor.emit(row)
+            model_row = self.table_row_to_model_row(row)
+            if model_row is not None:
+                self.open_editor.emit(model_row)
 
     def handle_double_click(self, row, col):
-        self.open_editor.emit(row)
+        model_row = self.table_row_to_model_row(row)
+        if model_row is not None:
+            self.open_editor.emit(model_row)
 
     def show_progress(self):
         percent = self.model.completion_percentage()

@@ -1,24 +1,25 @@
-# 📝 Anuvad – Desktop Translation Workbench
+# Anuvad - Desktop Translation Workbench
 
 <center>
 <img width="200" src="assets/images/logo.png" alt="Anuvad" />
 </center>
 
-**Anuvad** is a PyQt5-based desktop application designed for structured text translation workflows. It allows users to break down large text files into manageable segments, translate them efficiently, and track progress—all within a clean, professional UI.
+**Anuvad** is a PyQt5 desktop application for structured text translation workflows. It breaks large text files into numbered segments, supports manual and automatic translation, tracks progress, and stores work in a reusable project format.
 
 ---
 
-## 🚀 Features
+## Features
 
-### 📂 Project Management
+### Project Management
 
-- Start a **new project** by uploading a `.txt` file
-- Resume existing work from `.abd` files
-- All data stored in a dedicated `data/` directory
+- Start a new project by uploading a `.txt` file.
+- Resume existing work from `.abd` files.
+- Store source and target files in the configured data directory.
+- Read project metadata without parsing full segment content when listing saved projects.
 
-### 🧩 Structured Translation Workflow
+### Structured Translation Workflow
 
-- Automatically parses text into numbered segments:
+- Automatically parse text into numbered segments:
 
     ```text
     #1
@@ -28,35 +29,40 @@
     CHAPTER I
     ```
 
-- Navigate segment-by-segment or via list view
+- Navigate segment by segment or jump from the list view.
+- Track unsaved edits and save the active screen intentionally with `Ctrl+S`.
 
-### 🖥️ Modern UI
+### Editor
 
-- Split editor (Source | Translation) using resizable panels
-- Two-column list view for quick overview
-- Clean typography and spacing
-- Double-click navigation
+- Split editor with resizable source and translation panels.
+- Romanized preview text for non-Latin scripts.
+- Translated-text romanization uses the selected target language directly instead of repeatedly detecting language.
+- Translation romanization is debounced while typing to reduce UI lag on longer segments.
 
-### 🌍 Multi-Language Support
+### List View
 
-- Auto-detect source language
-- Select target language dynamically
-- Supports multiple languages (extensible)
+- Two-column project overview backed by `QTableView` and `QAbstractTableModel`.
+- Search and filtering through `QSortFilterProxyModel`.
+- Debounced search input to avoid rebuilding or filtering on every keystroke.
+- Completion counts ignore empty or whitespace-only translations.
 
-### ⚡ Auto Translation
+### Multi-Language Support
 
-- Integrated with LibreTranslate (Argos endpoint)
-- One-click translation per segment
-- Batch-ready architecture
+- Optional source language auto-detection on upload.
+- Dynamic target-language selection.
+- Indic transliteration support through `indic-transliteration`.
+- Extensible language definitions in `core/language.py`.
 
-### 📊 Progress Tracking
+### Auto Translation
 
-- View completion percentage
-- Track translated vs pending segments
+- Automatic translation uses `deep-translator` with `GoogleTranslator`.
+- Single-segment and bulk translation run on worker threads.
+- Translation progress, cancellation, completion, and errors are reported back to the UI.
+- Translator instances are cached per source/target language pair during worker execution.
 
-### 💾 Custom File Format (`.abd`)
+### Custom File Format (`.abd`)
 
-- Stores both content and metadata:
+- Stores content and metadata together:
 
     ```text
     # --- ANUVAD METADATA ---
@@ -64,51 +70,65 @@
     author: Purbayan
     role: source
     language: en
+    source_language: en
+    created_at: 2026-05-09T00:00:00+00:00
+    last_modified: 2026-05-09T00:00:00+00:00
     # --- END METADATA ---
     ```
 
-- Reliable and extensible (no fragile filename parsing)
+- Designed to avoid fragile filename parsing.
+- Supports separate source and target files for the same project.
 
-### ⚙️ Configurable via `app.cfg`
+### Configuration
 
-- Customize:
+- Configure behavior through `app.cfg`, including:
     - Data directory
-    - Default languages
-    - UI font
-    - API endpoint
+    - Default source and target languages
+    - Author metadata
+    - UI font and theme
+    - Translation settings
+
+- Stylesheets and icons are cached to avoid repeated file reads and icon construction.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
-```
+```text
 anuvad/
-│
-├── main.py
-├── app.cfg
-│
-├── core/
-│   ├── parser.py
-│   ├── file_handler.py
-│   ├── language.py
-│   ├── translator.py
-│   ├── config.py
-│
-├── models/
-│   ├── translation_model.py
-│
-├── ui/
-│   ├── main_window.py
-│   ├── upload_screen.py
-│   ├── list_screen.py
-│   ├── editor_screen.py
-│
-└── data/
+|
+- main.py
+- app.cfg
+- requirements.txt
+|
+- core/
+|   - parser.py
+|   - file_handler.py
+|   - language.py
+|   - translator.py
+|   - config.py
+|
+- models/
+|   - translation_model.py
+|
+- ui/
+|   - main_window.py
+|   - upload_screen.py
+|   - list_screen.py
+|   - editor_screen.py
+|   - translation_worker.py
+|
+- assets/
+|   - icons/
+|   - images/
+|   - qss/
+|
+- data/
 ```
 
 ---
 
-## ⚙️ Installation
+## Installation
 
 ### 1. Clone the repository
 
@@ -117,23 +137,34 @@ git clone <repo-url>
 cd anuvad
 ```
 
-### 2. Create virtual environment (recommended)
+### 2. Create a virtual environment
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate   # Linux/Mac
-.venv\Scripts\activate      # Windows
+source .venv/bin/activate
+```
+
+On Windows PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
 ```
 
 ### 3. Install dependencies
 
 ```bash
-pip install PyQt5 requests langdetect
+pip install -r requirements.txt
+```
+
+If automatic translation is enabled, ensure `deep-translator` is installed:
+
+```bash
+pip install deep-translator
 ```
 
 ---
 
-## ▶️ Running the App
+## Running the App
 
 ```bash
 python main.py
@@ -141,49 +172,44 @@ python main.py
 
 ---
 
-## 🧠 How It Works
+## How It Works
 
-1. Upload a text file
-2. App parses into structured segments
-3. Segments displayed in list view
-4. Translate manually or auto-translate
-5. Save progress in `.abd` format
-6. Resume anytime
-
----
-
-## 📌 Future Improvements
-
-- 🔄 Non-blocking translation (QThread)
-- 📊 Live progress bar
-- 📑 Multi-language parallel translation
-- 💾 Auto-save + versioning
-- 🌙 Dark theme
-- 📦 Export to JSON/CSV
+1. Upload a text file.
+2. The app parses it into structured segments.
+3. Segments appear in the list view with source and translation columns.
+4. Choose a target language.
+5. Translate manually, translate a single segment, or bulk translate untranslated segments.
+6. Save progress in `.abd` format.
+7. Resume the project later from the saved source or target file.
 
 ---
 
-## ⚠️ Known Limitations
+## Known Limitations
 
-- Auto translation is currently synchronous (UI may briefly freeze)
-- Public API may be rate-limited
-- Language detection may fail on very short text
+- Public translation services may be rate-limited or unavailable.
+- Language detection may fail on very short text.
+- Automatic translation quality depends on the upstream translation provider.
 
 ---
 
-## 👨‍💻 Author
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup steps, development guidelines, testing notes, and pull request expectations.
+
+---
+
+## Author
 
 **Purbayan Chowdhury**
 
 ---
 
-## 📜 License
+## License
 
-MIT License (or choose your preferred license)
+MIT License. See [LICENSE.md](LICENSE.md).
 
 ---
 
-## 💡 Philosophy
+## Philosophy
 
-Anuvad is built as a **translator’s tool**, not just a translator—
-focused on **control, structure, and workflow**, not blind automation.
+Anuvad is built as a translator's tool, not just a translator. It focuses on control, structure, and workflow rather than blind automation.

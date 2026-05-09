@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QProgressDialog,
 )
-from PyQt5.QtCore import pyqtSignal, Qt, QThread
+from PyQt5.QtCore import pyqtSignal, Qt, QThread, QTimer
 
 from core.config import AppConfig
 from core.language import convert_to_latin, is_latin
@@ -31,6 +31,12 @@ class EditorScreen(QWidget):
         self.translation_failed = False
         self.current_translation_dirty = False
         self.loading_current = False
+        self.translation_latin_update_timer = QTimer(self)
+        self.translation_latin_update_timer.setSingleShot(True)
+        self.translation_latin_update_timer.setInterval(250)
+        self.translation_latin_update_timer.timeout.connect(
+            self.update_translation_latin_text
+        )
 
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(15, 15, 15, 15)
@@ -79,7 +85,11 @@ class EditorScreen(QWidget):
         self.translated_text_roman.setWordWrap(True)
         self.translated_text_roman.setFixedHeight(200)
         right_layout.addWidget(self.translated_text_roman)
-        self.set_latin_text(self.translated_text.toPlainText(), self.translated_text_roman)
+        self.set_latin_text(
+            self.translated_text.toPlainText(),
+            self.translated_text_roman,
+            self.model.target_lang,
+        )
 
         right_panel.setLayout(right_layout)
 
@@ -132,11 +142,11 @@ class EditorScreen(QWidget):
 
         self.setLayout(main_layout)
 
-    def set_latin_text(self, text:str, label:QLabel):
+    def set_latin_text(self, text: str, label: QLabel, lang: str | None = None):
         if is_latin(text):
             label.setText("")
         else:
-            label.setText(convert_to_latin(text))
+            label.setText(convert_to_latin(text, lang))
 
     # ---------------------------
     # 🔹 Load Data
@@ -149,9 +159,16 @@ class EditorScreen(QWidget):
         self.loading_current = False
 
     def handle_translation_text_changed(self):
-        self.set_latin_text(self.translated_text.toPlainText(), self.translated_text_roman)
+        self.translation_latin_update_timer.start()
         if not self.loading_current:
             self.current_translation_dirty = True
+
+    def update_translation_latin_text(self):
+        self.set_latin_text(
+            self.translated_text.toPlainText(),
+            self.translated_text_roman,
+            self.model.target_lang,
+        )
 
     # ---------------------------
     # 🔹 Save

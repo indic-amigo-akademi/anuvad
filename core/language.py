@@ -69,8 +69,8 @@ def is_indic(lang: str) -> bool:
     return lang in SUPPORTED_INDIC_LANG
 
 
-def convert_to_latin(text: str) -> str:
-    lang = detect_language(text)
+def convert_to_latin(text: str, lang: str | None = None) -> str:
+    lang = lang or detect_language(text)
     if is_indic(lang):
         text = text.replace("।", ".")
         text = transliterate(

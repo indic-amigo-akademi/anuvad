@@ -158,12 +158,22 @@ class AppConfig:
         if cache_key in self._icon_cache:
             return self._icon_cache[cache_key]
 
-        icon_path = resource_path(os.path.join("assets", "icons", f"{name}.svg"))
-        if os.path.exists(icon_path):
-            icon = QIcon(icon_path)
-            icon.setThemeName(color)
-        else:
-            icon = QIcon(resource_path(os.path.join("assets", "icons", "default.svg")))
+        icon_path = None
+        candidate_paths = [
+            os.path.join("assets", "icons", f"{name}_{color}.svg"),
+            os.path.join("assets", "icons", color, f"{name}.svg"),
+            os.path.join("assets", "icons", f"{name}.svg"),
+        ]
 
+        for candidate in candidate_paths:
+            candidate_path = resource_path(candidate)
+            if os.path.exists(candidate_path):
+                icon_path = candidate_path
+                break
+
+        if icon_path is None:
+            icon_path = resource_path(os.path.join("assets", "icons", "default.svg"))
+
+        icon = QIcon(icon_path)
         self._icon_cache[cache_key] = icon
         return icon

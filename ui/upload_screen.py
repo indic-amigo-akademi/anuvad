@@ -147,7 +147,7 @@ class UploadScreen(QWidget):
 
             # ask user for target language
             dlg = ComboInputDialog(
-                title="Multiple Targets",
+                title="Multiple Target Languages Detected",
                 label="Pick the target language:",
                 items=[
                     (SUPPORTED_LANGUAGES[tgt_lang], tgt_lang)

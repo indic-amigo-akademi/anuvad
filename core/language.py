@@ -48,7 +48,10 @@ def get_indic_script_name(lang: str) -> str:
     if lang in ["te"]:
         return sanscript.TELUGU
 
-    return getattr(sanscript, lang.upper())
+    script = getattr(sanscript, lang.upper(), None)
+    if script is None:
+        raise ValueError(f"Unsupported Indic language code: {lang}")
+    return script
 
 
 def detect_language(text: str) -> str:

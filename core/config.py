@@ -162,7 +162,7 @@ class AppConfig:
             self._stylesheet_cache.clear()
 
     def tr(self, key: str, **kwargs) -> str:
-        return translate(key, self.ui_language, **kwargs)
+        return translate(key, self.ui_language or "en", **kwargs)
 
     def get_icon(self, name, color="light"):
         cache_key = (name, color)

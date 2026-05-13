@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
 from ui.upload_screen import UploadScreen
 from ui.list_screen import ListScreen
 from ui.editor_screen import EditorScreen
+from ui.custom_widget import MetadataEditDialog
 from core.config import AppConfig
 from core.i18n import APP_LANGUAGES
 from models.translation_model import TranslationModel
@@ -81,6 +82,9 @@ class MainWindow(QMainWindow):
         save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self.save_current)
 
+        metadata_action = QAction(self.config.tr("edit_metadata"), self)
+        metadata_action.triggered.connect(self.edit_metadata)
+
         exit_action = QAction(self.config.tr("exit"), self)
         exit_action.setShortcut("Ctrl+Q")
         exit_action.triggered.connect(self.close)
@@ -89,6 +93,8 @@ class MainWindow(QMainWindow):
         file_menu.addAction(open_action)
         file_menu.addSeparator()
         file_menu.addAction(save_action)
+        file_menu.addSeparator()
+        file_menu.addAction(metadata_action)
         file_menu.addSeparator()
         file_menu.addAction(exit_action)
 
@@ -170,6 +176,34 @@ class MainWindow(QMainWindow):
         self.upload_screen.retranslate_ui()
         self.list_screen.retranslate_ui()
         self.editor_screen.retranslate_ui()
+
+    def edit_metadata(self):
+        if not self.model.base_filename:
+            QMessageBox.information(
+                self,
+                self.config.tr("no_project"),
+                self.config.tr("no_project_open"),
+            )
+            return
+
+        dlg = MetadataEditDialog(
+            name=self.model.base_filename,
+            author=self.model.author,
+            title=self.config.tr("edit_metadata"),
+            name_label=self.config.tr("project_name"),
+            author_label=self.config.tr("project_author"),
+            parent=self,
+        )
+        if dlg.exec_():
+            new_name = dlg.project_name
+            new_author = dlg.project_author
+            if new_name and new_author:
+                self.model.update_metadata(new_name, new_author, self.config.data_dir)
+                QMessageBox.information(
+                    self,
+                    self.config.tr("success"),
+                    self.config.tr("metadata_updated"),
+                )
 
     def show_about(self):
         QMessageBox.information(

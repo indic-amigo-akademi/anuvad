@@ -211,6 +211,31 @@ class TranslationModel:
         ]
 
     # ---------------------------
+    # 🔹 METADATA
+    # ---------------------------
+    def update_metadata(self, name: str, author: str, data_dir: str):
+        old_name = self.base_filename
+        self.base_filename = name
+        self.author = author
+
+        self.save_source_file(output_dir=data_dir)
+
+        current_target = self.target_lang
+        for tgt_lang in self.avl_tgt_langs:
+            self.target_lang = tgt_lang
+            self.save_target_file(output_dir=data_dir)
+        self.target_lang = current_target
+
+        if old_name and old_name != name:
+            old_src = os.path.join(data_dir, f"{old_name}.{self.src_lang}.abd")
+            if os.path.exists(old_src):
+                os.remove(old_src)
+            for tgt_lang in self.avl_tgt_langs:
+                old_tgt = os.path.join(data_dir, f"{old_name}.{tgt_lang}.abd")
+                if os.path.exists(old_tgt):
+                    os.remove(old_tgt)
+
+    # ---------------------------
     # 🔹 SAVING
     # ---------------------------
     def save_source_file(self, output_dir: str = "data"):

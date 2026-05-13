@@ -28,8 +28,11 @@ def _load_translations():
             continue
         lang_code = filename.removesuffix(".json")
         filepath = os.path.join(I18N_DIR, filename)
-        with open(resource_path(filepath), "r", encoding="utf-8") as f:
-            TRANSLATIONS[lang_code] = json.load(f)
+        try:
+            with open(resource_path(filepath), "r", encoding="utf-8") as f:
+                TRANSLATIONS[lang_code] = json.load(f)
+        except (json.JSONDecodeError, IOError, ValueError):
+            continue
 
         label = LANGUAGE_LABELS.get(lang_code, lang_code)
         APP_LANGUAGES[lang_code] = label

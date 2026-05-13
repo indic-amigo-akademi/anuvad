@@ -50,6 +50,7 @@
 
 - Optional source language auto-detection on upload.
 - Dynamic target-language selection.
+- Application language can be changed from the Settings menu.
 - Indic transliteration support through `indic-transliteration`.
 - Extensible language definitions in `core/language.py`.
 
@@ -86,6 +87,7 @@
     - Default source and target languages
     - Author metadata
     - UI font and theme
+    - Application language
     - Translation settings
 
 - Stylesheets and icons are cached to avoid repeated file reads and icon construction.

@@ -38,9 +38,9 @@ class UploadScreen(QWidget):
         layout.setSpacing(15)
 
         # -------- Existing Projects --------
-        resumeLabel = QLabel("Resume Existing Project")
-        resumeLabel.setObjectName("title")
-        layout.addWidget(resumeLabel)
+        self.resume_label = QLabel()
+        self.resume_label.setObjectName("title")
+        layout.addWidget(self.resume_label)
 
         self.project_list = QListWidget()
         self.project_list.itemDoubleClicked.connect(self.open_selected_project)
@@ -48,10 +48,10 @@ class UploadScreen(QWidget):
 
         btn_row = QHBoxLayout()
 
-        self.refresh_btn = QPushButton("Refresh")
+        self.refresh_btn = QPushButton()
         self.refresh_btn.clicked.connect(self.load_projects)
 
-        self.open_btn = QPushButton("Open Selected")
+        self.open_btn = QPushButton()
         self.open_btn.clicked.connect(self.open_selected_project)
 
         btn_row.addWidget(self.refresh_btn)
@@ -63,15 +63,15 @@ class UploadScreen(QWidget):
         # layout.addWidget(
         #     QLabel("──────── OR ────────"), alignment=Qt.AlignmentFlag.AlignCenter
         # )
-        line = DividerWidget()
-        layout.addWidget(line)
+        self.divider = DividerWidget()
+        layout.addWidget(self.divider)
 
         # -------- New Project --------
-        newLabel = QLabel("New Project")
-        newLabel.setObjectName("title")
-        layout.addWidget(newLabel)
+        self.new_label = QLabel()
+        self.new_label.setObjectName("title")
+        layout.addWidget(self.new_label)
 
-        self.upload_btn = QPushButton("Choose File")
+        self.upload_btn = QPushButton()
         self.upload_btn.clicked.connect(self.choose_file)
         layout.addWidget(self.upload_btn)
 
@@ -80,7 +80,7 @@ class UploadScreen(QWidget):
             self.lang_dropdown.addItem(name, code)
         layout.addWidget(self.lang_dropdown)
 
-        self.auto_detect = QCheckBox("Auto Detect Language")
+        self.auto_detect = QCheckBox()
         self.auto_detect.setChecked(True)
         layout.addWidget(self.auto_detect)
 
@@ -89,6 +89,16 @@ class UploadScreen(QWidget):
         self.setLayout(layout)
 
         self.load_projects()
+        self.retranslate_ui()
+
+    def retranslate_ui(self):
+        self.resume_label.setText(self.config.tr("resume_existing_project"))
+        self.refresh_btn.setText(self.config.tr("refresh"))
+        self.open_btn.setText(self.config.tr("open_selected"))
+        self.divider.setText(self.config.tr("or"))
+        self.new_label.setText(self.config.tr("new_project"))
+        self.upload_btn.setText(self.config.tr("choose_file"))
+        self.auto_detect.setText(self.config.tr("auto_detect_language"))
 
     # ---------------------------
     # 🔹 Load Existing Projects
@@ -147,8 +157,8 @@ class UploadScreen(QWidget):
 
             # ask user for target language
             dlg = ComboInputDialog(
-                title="Multiple Target Languages Detected",
-                label="Pick the target language:",
+                title=self.config.tr("multiple_target_languages"),
+                label=self.config.tr("pick_target_language"),
                 items=[
                     (SUPPORTED_LANGUAGES[tgt_lang], tgt_lang)
                     for tgt_lang in target_langs
@@ -167,7 +177,10 @@ class UploadScreen(QWidget):
     # ---------------------------
     def choose_file(self):
         filepath, _ = QFileDialog.getOpenFileName(
-            self, "Open File", "", "Text Files (*.txt)"
+            self,
+            self.config.tr("open_file"),
+            "",
+            self.config.tr("text_files_filter"),
         )
         if not filepath:
             return

@@ -4,6 +4,7 @@ import configparser
 import os
 from PyQt5.QtGui import QIcon
 from core.file_handler import load_qss, resource_path
+from core.i18n import translate
 
 
 class AppConfig:
@@ -37,6 +38,7 @@ class AppConfig:
 
         self.config["ui"] = {
             "theme": "light",
+            "language": "en",
             "font_family": "'Segoe UI', 'Nirmala UI', sans-serif",
             "font_size": "14",
         }
@@ -116,6 +118,10 @@ class AppConfig:
         return self.get("ui", "theme", "light")
 
     @property
+    def ui_language(self):
+        return self.get("ui", "language", "en")
+
+    @property
     def appname(self):
         return self.get("app", "name", "Anuvad")
 
@@ -148,10 +154,15 @@ class AppConfig:
             self.config.write(f)
 
     def set(self, section, key, value):
+        if not self.config.has_section(section):
+            self.config.add_section(section)
         self.config.set(section, key, value)
         self.save()
         if section == "ui":
             self._stylesheet_cache.clear()
+
+    def tr(self, key: str, **kwargs) -> str:
+        return translate(key, self.ui_language or "en", **kwargs)
 
     def get_icon(self, name, color="light"):
         cache_key = (name, color)

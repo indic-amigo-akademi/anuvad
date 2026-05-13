@@ -227,13 +227,16 @@ class TranslationModel:
         self.target_lang = current_target
 
         if old_name and old_name != name:
-            old_src = os.path.join(data_dir, f"{old_name}.{self.src_lang}.abd")
-            if os.path.exists(old_src):
-                os.remove(old_src)
-            for tgt_lang in self.avl_tgt_langs:
-                old_tgt = os.path.join(data_dir, f"{old_name}.{tgt_lang}.abd")
-                if os.path.exists(old_tgt):
-                    os.remove(old_tgt)
+            try:
+                old_src = os.path.join(data_dir, f"{old_name}.{self.src_lang}.abd")
+                if os.path.exists(old_src):
+                    os.remove(old_src)
+                for tgt_lang in self.avl_tgt_langs:
+                    old_tgt = os.path.join(data_dir, f"{old_name}.{tgt_lang}.abd")
+                    if os.path.exists(old_tgt):
+                        os.remove(old_tgt)
+            except OSError:
+                pass
 
     # ---------------------------
     # 🔹 SAVING

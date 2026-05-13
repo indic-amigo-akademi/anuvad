@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
         if not file_menu:
             return
 
-        new_action = QAction(self.config.tr("new_project"), self)
+        new_action = QAction(self.config.tr("new_project"), file_menu)
         new_action.setShortcut("Ctrl+N")
         new_action.triggered.connect(self.go_to_upload)
 

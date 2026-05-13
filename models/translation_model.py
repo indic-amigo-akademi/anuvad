@@ -235,8 +235,9 @@ class TranslationModel:
                     old_tgt = os.path.join(data_dir, f"{old_name}.{tgt_lang}.abd")
                     if os.path.exists(old_tgt):
                         os.remove(old_tgt)
-            except OSError:
-                pass
+            except OSError as e:
+                # Best-effort cleanup: keep metadata update successful even if old file removal fails.
+                print(f"Warning: failed to remove old translation files for '{old_name}': {e}")
 
     # ---------------------------
     # 🔹 SAVING

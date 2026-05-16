@@ -2,10 +2,19 @@
 
 ## High Priority
 
-- [ ] Add support for editing text metadata.
+- [x] Add support for editing text metadata.
     - Allow updating project metadata such as title and author.
     - Save metadata changes back into `.abd` files.
     - Keep metadata editing consistent for source and target files.
+
+## Medium Priority
+
+- [ ] Add proper test suite with pytest for all core and model modules.
+
+## Low Priority
+
+- [ ] Add integration tests for UI screens (requires QTest/qtbot).
+- [ ] Add `conftest.py` for shared test fixtures.
 
 ## Completed
 
@@ -21,3 +30,4 @@
 - [x] Cache loaded QSS stylesheets and icons.
 - [x] Clean up unused imports and unused fields.
 - [x] Harden file and path handling.
+- [x] Set up comprehensive test suite — 67 tests covering parser, file_handler, language, and TranslationModel.

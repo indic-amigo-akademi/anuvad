@@ -158,18 +158,30 @@ On Windows PowerShell:
 pip install -r requirements.txt
 ```
 
-If automatic translation is enabled, ensure `deep-translator` is installed:
-
-```bash
-pip install deep-translator
-```
-
 ---
 
 ## Running the App
 
 ```bash
 python main.py
+```
+
+## Running Tests
+
+To run the test suite:
+
+```bash
+pytest
+```
+
+If you encounter import errors when running tests from the repository root, use:
+
+```bash
+# On Linux/Mac
+PYTHONPATH=. pytest
+
+# On Windows PowerShell
+$env:PYTHONPATH='.'; pytest
 ```
 
 ---

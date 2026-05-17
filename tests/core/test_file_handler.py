@@ -2,9 +2,13 @@
 """Unit tests for core.file_handler."""
 
 import os
+from pathlib import Path
 
 from core.file_handler import (
     get_base_filename,
+    load_qss,
+    resource_path,
+    resolve_qss_asset_urls,
     save_structured_file,
     read_abd_file,
     write_abd_file,
@@ -22,6 +26,46 @@ class TestGetBaseFilename:
 
     def test_multiple_dots(self):
         assert get_base_filename("my.file.txt") == "my.file"
+
+
+class TestResourcePath:
+    def test_resource_path_does_not_depend_on_cwd(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+
+        path = Path(resource_path("assets/icons/default.svg"))
+
+        assert path.is_file()
+        assert path.name == "default.svg"
+
+    def test_absolute_resource_path_is_preserved(self, tmp_path):
+        path = tmp_path / "custom.qss"
+
+        assert resource_path(str(path)) == str(path)
+
+
+class TestLoadQss:
+    def test_relative_urls_are_rewritten_to_absolute_asset_paths(self):
+        stylesheet = (
+            "QComboBox::down-arrow { image: url(assets/icons/chevron-down.svg); }\n"
+            "QWidget { image: url(:/qt-project.org/styles/commonstyle/images/file-16.png); }"
+        )
+
+        resolved = resolve_qss_asset_urls(stylesheet)
+
+        assert "url(assets/icons/chevron-down.svg)" not in resolved
+        assert Path(resource_path("assets/icons/chevron-down.svg")).as_posix() in resolved
+        assert "url(:/qt-project.org/styles/commonstyle/images/file-16.png)" in resolved
+
+    def test_load_qss_rewrites_urls(self, tmp_path):
+        qss = tmp_path / "test.qss"
+        qss.write_text(
+            "QCheckBox::indicator { image: url(assets/icons/checkbox_checked.svg); }",
+            encoding="utf-8",
+        )
+
+        stylesheet = load_qss(str(qss))
+
+        assert Path(resource_path("assets/icons/checkbox_checked.svg")).as_posix() in stylesheet
 
 
 class TestWriteAndReadABD:

@@ -2,7 +2,19 @@
 
 from typing import List, Tuple, Dict
 import os
+import re
 import sys
+from pathlib import Path
+
+
+QSS_URL_RE = re.compile(r"url\((['\"]?)([^)'\"\n]+)\1\)")
+
+
+def app_root_path() -> str:
+    """Return the bundled or source-tree root used for application assets."""
+    if getattr(sys, "frozen", False):
+        return sys._MEIPASS
+    return str(Path(__file__).resolve().parents[1])
 
 
 def get_base_filename(filepath: str) -> str:
@@ -14,18 +26,36 @@ def get_base_filename(filepath: str) -> str:
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
+    if os.path.isabs(relative_path):
+        return os.path.normpath(relative_path)
+
     relative_path = os.path.normpath(relative_path)
-    if getattr(sys, 'frozen', False):
-        base_path = sys._MEIPASS
-    else:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
+    return os.path.join(app_root_path(), relative_path)
+
+
+def _resolve_qss_url(match):
+    quote, url = match.groups()
+    if (
+        "://" in url
+        or url.startswith(":")
+        or url.startswith("data:")
+        or os.path.isabs(url)
+    ):
+        return match.group(0)
+
+    resolved = Path(resource_path(url)).as_posix()
+    return f'url({quote}{resolved}{quote})'
+
+
+def resolve_qss_asset_urls(stylesheet):
+    """Make relative QSS asset URLs independent of the process cwd."""
+    return QSS_URL_RE.sub(_resolve_qss_url, stylesheet)
 
 
 def load_qss(path):
     """Load qss file"""
     with open(resource_path(path), "r", encoding="utf-8") as f:
-        return f.read()
+        return resolve_qss_asset_urls(f.read())
 
 
 def save_structured_file(

@@ -99,3 +99,15 @@ def test_tr_uses_configured_ui_language(app_config, monkeypatch):
     app_config.set("ui", "language", "bn")
 
     assert app_config.tr("greeting", name="Anuvad") == "bn:greeting:Anuvad"
+
+
+def test_get_icon_uses_resource_paths_and_cache(app_config, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    first = app_config.get_icon("save")
+    second = app_config.get_icon("save")
+    fallback = app_config.get_icon("missing")
+
+    assert first is second
+    assert not first.isNull()
+    assert not fallback.isNull()

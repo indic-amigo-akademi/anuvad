@@ -4,13 +4,15 @@
 
 ## Medium Priority
 
-## Low Priority
+- [ ] Add export to PDF functionality.
 
-- [ ] Add integration tests for UI screens (requires QTest/qtbot).
-- [ ] Add `conftest.py` for shared test fixtures.
+## Low Priority
 
 ## Completed
 
+- [x] Fix QSS asset and icon loading so stylesheets and icons resolve outside the project working directory.
+- [x] Add UI integration tests for upload, list, editor, and main-window navigation.
+- [x] Add shared pytest fixtures, including headless Qt app/config/model helpers and a QTest-backed `qtbot`.
 - [x] Add text metadata editing with title/author updates saved back to source and target `.abd` files.
 - [x] Support internationalization with a Settings menu language option.
 - [x] Move auto-translation off the UI thread for list and editor translation.
@@ -24,4 +26,4 @@
 - [x] Cache loaded QSS stylesheets and icons.
 - [x] Clean up unused imports and unused fields.
 - [x] Harden file and path handling.
-- [x] Set up comprehensive pytest suite — 81 tests covering all core modules and TranslationModel.
+- [x] Set up comprehensive pytest suite — 90 tests covering core modules, UI screens, and TranslationModel.

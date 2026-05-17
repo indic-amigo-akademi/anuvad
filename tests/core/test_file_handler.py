@@ -3,8 +3,6 @@
 
 import os
 
-import pytest
-
 from core.file_handler import (
     get_base_filename,
     save_structured_file,

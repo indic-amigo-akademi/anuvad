@@ -8,7 +8,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
-[![Coverage Status](https://img.shields.io/codecov/c/github/indic-amigo-akademi/anuvad/integrate-test.svg)](https://codecov.io/gh/indic-amigo-akademi/anuvad)
+[![Coverage Status](https://github.com/indic-amigo-akademi/anuvad/actions/workflows/python-test.yml/badge.svg)](https://github.com/indic-amigo-akademi/anuvad/actions)
 
 ---
 

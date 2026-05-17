@@ -27,28 +27,23 @@ SUPPORTED_LATIN_LANG = {
 
 SUPPORTED_LANGUAGES = SUPPORTED_INDIC_LANG | SUPPORTED_LATIN_LANG
 
+INDIC_SCRIPT_NAMES = {
+    "hi": sanscript.DEVANAGARI,
+    "mr": sanscript.DEVANAGARI,
+    "bn": sanscript.BENGALI,
+    "as": sanscript.BENGALI,
+    "or": sanscript.ORIYA,
+    "ta": sanscript.TAMIL,
+    "kn": sanscript.KANNADA,
+    "ml": sanscript.MALAYALAM,
+    "gu": sanscript.GUJARATI,
+    "pa": sanscript.GURMUKHI,
+    "te": sanscript.TELUGU,
+}
+
 
 def get_indic_script_name(lang: str) -> str:
-    if lang in ["hi", "mr"]:
-        return sanscript.DEVANAGARI
-    if lang in ["bn", "as"]:
-        return sanscript.BENGALI
-    if lang in ["or"]:
-        return sanscript.ORIYA
-    if lang in ["ta"]:
-        return sanscript.TAMIL
-    if lang in ["kn"]:
-        return sanscript.KANNADA
-    if lang in ["ml"]:
-        return sanscript.MALAYALAM
-    if lang in ["gu"]:
-        return sanscript.GUJARATI
-    if lang in ["pa"]:
-        return sanscript.GURMUKHI
-    if lang in ["te"]:
-        return sanscript.TELUGU
-
-    script = getattr(sanscript, lang.upper(), None)
+    script = INDIC_SCRIPT_NAMES.get(lang, getattr(sanscript, lang.upper(), None))
     if script is None:
         raise ValueError(f"Unsupported Indic language code: {lang}")
     return script

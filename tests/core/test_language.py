@@ -1,8 +1,6 @@
 # tests/core/test_language.py
 """Unit tests for core.language."""
 
-import pytest
-
 from core.language import detect_language, is_latin, is_indic, convert_to_latin
 
 

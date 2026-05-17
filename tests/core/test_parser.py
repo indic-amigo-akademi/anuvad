@@ -1,8 +1,6 @@
 # tests/core/test_parser.py
 """Unit tests for core.parser."""
 
-import pytest
-
 from core.parser import parse_raw_text, parse_structured_file
 
 

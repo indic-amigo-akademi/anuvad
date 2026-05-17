@@ -65,7 +65,7 @@ class ComboInputDialog(QDialog):
 
     def selectedData(self):
         return self.combo.currentData()
-    
+
     def selectedText(self):
         return self.combo.currentText()
 

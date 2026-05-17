@@ -11,6 +11,7 @@ def get_base_filename(filepath: str) -> str:
     """
     return os.path.splitext(os.path.basename(filepath))[0]
 
+
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     relative_path = os.path.normpath(relative_path)
@@ -20,10 +21,12 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+
 def load_qss(path):
     """Load qss file"""
     with open(resource_path(path), "r", encoding="utf-8") as f:
         return f.read()
+
 
 def save_structured_file(
     base_filename: str,
@@ -58,7 +61,7 @@ def save_translated_file(
     """
     filename = f"{base_filename}.{target_lang}.abd"
     output_path = os.path.join(output_dir, filename)
-    
+
     write_abd_file(output_path, metadata, translations.items())
 
     return output_path

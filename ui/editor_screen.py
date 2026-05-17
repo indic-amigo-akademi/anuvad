@@ -129,7 +129,12 @@ class EditorScreen(QWidget):
         self.back_btn.clicked.connect(self.go_back)
 
         self.translated_text.textChanged.connect(self.handle_translation_text_changed)
-        self.source_text.textChanged.connect(lambda: self.set_latin_text(self.source_text.toPlainText(), self.source_text_roman))
+        self.source_text.textChanged.connect(
+            lambda: self.set_latin_text(
+                self.source_text.toPlainText(),
+                self.source_text_roman,
+            )
+        )
 
         nav_layout.addWidget(self.prev_btn)
         nav_layout.addWidget(self.auto_btn)

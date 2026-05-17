@@ -18,8 +18,6 @@ APP_LANGUAGES: dict[str, str] = {}
 
 
 def _load_translations():
-    global TRANSLATIONS, APP_LANGUAGES
-
     if not os.path.isdir(resource_path(I18N_DIR)):
         return
 

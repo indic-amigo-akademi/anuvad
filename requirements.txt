@@ -1,4 +1,8 @@
 langdetect==1.0.9
-pyqt5
+pyqt5>=5.15
 pyinstaller
 indic-transliteration
+deep-translator
+pytest>=7.0
+pytest-cov
+flake8

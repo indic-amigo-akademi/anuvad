@@ -235,7 +235,7 @@ class ListScreen(QWidget):
     # ---------------------------
     # 🔹 Refresh UI
     # ---------------------------
-    def refresh(self):        
+    def refresh(self):
         self.populate_language_dropdown()
         self.populate_table()
         self.show_progress()

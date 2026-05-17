@@ -28,10 +28,12 @@ def main():
     window = MainWindow(config=config)
     window.show()
 
-    sys.exit(app.exec_())
+    exit_code = app.exec_()
 
     # Handling app exit
     on_exit(config)
+
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":

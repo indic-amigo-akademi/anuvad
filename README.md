@@ -6,6 +6,10 @@
 
 **Anuvad** is a PyQt5 desktop application for structured text translation workflows. It breaks large text files into numbered segments, supports manual and automatic translation, tracks progress, and stores work in a reusable project format.
 
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
+[![Coverage Status](https://img.shields.io/codecov/c/github/indic-amigo-akademi/anuvad/integrate-test.svg)](https://codecov.io/gh/indic-amigo-akademi/anuvad)
+
 ---
 
 ## Features
@@ -183,6 +187,33 @@ PYTHONPATH=. pytest
 # On Windows PowerShell
 $env:PYTHONPATH='.'; pytest
 ```
+
+### Generating Coverage Reports
+
+To generate a coverage report, first install `pytest-cov`:
+
+```bash
+pip install pytest-cov
+```
+
+Then run the tests with coverage:
+
+```bash
+pytest --cov=./ --cov-report=html --cov-report=term
+```
+
+This will:
+
+- Generate an HTML report in the `htmlcov/` directory (open `htmlcov/index.html` in a browser)
+- Show a terminal report with coverage percentages
+
+For CI systems, you can also generate an XML report:
+
+```bash
+pytest --cov=./ --cov-report=xml
+```
+
+This produces `coverage.xml` for tools like Codecov or GitHub Actions.
 
 ---
 

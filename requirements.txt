@@ -6,3 +6,4 @@ deep-translator
 pytest>=7.0
 pytest-cov
 flake8
+pillow

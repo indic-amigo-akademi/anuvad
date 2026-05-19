@@ -2,16 +2,17 @@
 
 import configparser
 import os
+import shutil
 from PyQt5.QtGui import QIcon
-from core.file_handler import load_qss, resource_path
+from core.file_handler import load_qss, resource_path, user_data_path
 from core.i18n import translate
 
 
 class AppConfig:
     def __init__(self, filepath="app.cfg"):
-        self.filepath = resource_path(filepath)
+        self.filepath = user_data_path(filepath)
         self.config = configparser.ConfigParser()
-        self.config_dir = os.path.join(os.path.expanduser("~"), ".anuvad")
+        # self.config_dir = os.path.join(os.path.expanduser("~"), ".anuvad")
         self._stylesheet_cache = {}
         self._icon_cache = {}
 
@@ -24,27 +25,7 @@ class AppConfig:
         self.config.read(self.filepath)
 
     def _create_default(self):
-        self.config["app"] = {"name": "Anuvad", "version": "1.0", "author": ""}
-
-        self.config["paths"] = {"data_dir": "data", "default_export_dir": "exports"}
-
-        self.config["user"] = {"author": "Anonymous"}
-
-        self.config["language"] = {
-            "default_source": "en",
-            "default_target": "bn",
-            "auto_detect": "true",
-        }
-
-        self.config["ui"] = {
-            "theme": "light",
-            "language": "en",
-            "font_family": "'Segoe UI', 'Nirmala UI', sans-serif",
-            "font_size": "14",
-        }
-
-        with open(self.filepath, "w") as f:
-            self.config.write(f)
+        shutil.copyfile(resource_path("app.cfg"), self.filepath)
 
     # ---------------------------
     # 🔹 Getters
@@ -63,18 +44,16 @@ class AppConfig:
     # ---------------------------
     @property
     def data_dir(self):
-        data_dir_path = os.path.join(
-            self.config_dir, self.get("paths", "data_dir", "data") or "data"
-        )
+        data_dir_path = user_data_path(self.get("paths", "data_dir", "data") or "data")
+
         if not os.path.exists(data_dir_path):
             os.makedirs(data_dir_path)
         return data_dir_path
 
     @property
     def export_dir(self):
-        export_dir_path = os.path.join(
-            self.config_dir,
-            self.get("paths", "default_export_dir", "exports") or "exports",
+        export_dir_path = user_data_path(
+            self.get("paths", "export_dir", "exports") or "exports"
         )
         if not os.path.exists(export_dir_path):
             os.makedirs(export_dir_path)

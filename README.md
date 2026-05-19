@@ -106,6 +106,7 @@ anuvad/
 - main.py
 - app.cfg
 - requirements.txt
+- requirements-dev.txt
 |
 - core/
 |   - parser.py
@@ -162,6 +163,12 @@ On Windows PowerShell:
 pip install -r requirements.txt
 ```
 
+For development, tests, linting, and packaging tools, install:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
 ---
 
 ## Running the App
@@ -193,7 +200,7 @@ $env:PYTHONPATH='.'; pytest
 To generate a coverage report, first install `pytest-cov`:
 
 ```bash
-pip install pytest-cov
+pip install -r requirements-dev.txt
 ```
 
 Then run the tests with coverage:
@@ -214,6 +221,29 @@ pytest --cov=./ --cov-report=xml
 ```
 
 This produces `coverage.xml` for tools like Codecov or GitHub Actions.
+
+---
+
+## Packaging
+
+Windows builds use PyInstaller and bundle only runtime assets: icons, `icon.ico`,
+translations, QSS, and `app.cfg`. Development tools and tests live in
+`requirements-dev.txt` so they do not become runtime dependencies.
+
+```powershell
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+.\scripts\build.ps1
+.\scripts\size-report.ps1
+```
+
+Use `scripts/size-report.ps1` after a build to list total bundle size and the
+largest files in `dist/Anuvad`.
+
+Current Windows measurements from the project venv:
+
+- `onedir`: `85.55 MB` in `dist/Anuvad`, preferred for easier debugging and faster startup.
+- `onefile`: `37.88 MB` compressed as a single EXE, with slower first launch due to extraction.
 
 ---
 

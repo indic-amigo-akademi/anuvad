@@ -6,7 +6,6 @@ import re
 import sys
 from pathlib import Path
 
-
 QSS_URL_RE = re.compile(r"url\((['\"]?)([^)'\"\n]+)\1\)")
 
 
@@ -24,8 +23,17 @@ def get_base_filename(filepath: str) -> str:
     return os.path.splitext(os.path.basename(filepath))[0]
 
 
+def user_data_path(relative_path) -> str:
+    """ """
+    if os.path.isabs(relative_path):
+        return os.path.normpath(relative_path)
+
+    relative_path = os.path.normpath(relative_path)
+    return os.path.join(os.path.expanduser("~"), ".anuvad", relative_path)
+
+
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
+    """Get absolute path to resource, works for dev and for PyInstaller"""
     if os.path.isabs(relative_path):
         return os.path.normpath(relative_path)
 
@@ -44,7 +52,7 @@ def _resolve_qss_url(match):
         return match.group(0)
 
     resolved = Path(resource_path(url)).as_posix()
-    return f'url({quote}{resolved}{quote})'
+    return f"url({quote}{resolved}{quote})"
 
 
 def resolve_qss_asset_urls(stylesheet):

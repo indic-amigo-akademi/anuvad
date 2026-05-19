@@ -1,0 +1,4 @@
+flake8
+pyinstaller
+pytest>=7.0
+pytest-cov

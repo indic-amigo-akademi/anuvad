@@ -62,7 +62,7 @@ def app_config(tmp_path, monkeypatch):
     cfg["app"] = {"name": "TestApp", "version": "1.0", "author": "Tester"}
     cfg["paths"] = {
         "data_dir": str(tmp_path / "data"),
-        "default_export_dir": str(tmp_path / "exports"),
+        "export_dir": str(tmp_path / "exports"),
     }
     cfg["user"] = {"author": "Test Author"}
     cfg["language"] = {

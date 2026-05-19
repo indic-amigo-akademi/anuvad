@@ -4,12 +4,6 @@
 
 ## Medium Priority
 
-- [ ] Optimize packaged EXE size.
-    - Audit PyInstaller bundle contents and identify largest included dependencies/assets.
-    - Exclude unused PyQt5 modules, translators, test files, caches, and development-only packages.
-    - Review `Anuvad.spec` and build scripts for unnecessary hidden imports and bundled data.
-    - Compare `--onefile` vs `--onedir` output size and startup trade-offs.
-    - Document repeatable build-size checks for future releases.
 - [ ] Add export to PDF functionality.
     - Add an export action in the UI for saving the current translation/project as PDF.
     - Generate PDFs from source and translated segments with stable ordering and readable formatting.
@@ -22,6 +16,7 @@
 
 ## Completed
 
+- [x] Optimize packaged EXE size with a tracked PyInstaller spec, runtime-only assets, dev dependency split, and repeatable size reporting.
 - [x] Fix QSS asset and icon loading so stylesheets and icons resolve outside the project working directory.
 - [x] Add UI integration tests for upload, list, editor, and main-window navigation.
 - [x] Add shared pytest fixtures, including headless Qt app/config/model helpers and a QTest-backed `qtbot`.

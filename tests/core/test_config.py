@@ -31,7 +31,7 @@ def test_missing_config_creates_default_file(config_path, tmp_path, monkeypatch)
     assert config_path.exists()
     assert cfg.appname == "Anuvad"
     assert cfg.appversion == "1.0"
-    assert cfg.author == "Anonymous"
+    assert cfg.author == "Purbayan Chowdhury(chowdhury.purbayan@gmail.com)"
     assert cfg.default_source_lang == "en"
     assert cfg.default_target_lang == "bn"
     assert cfg.auto_detect is True

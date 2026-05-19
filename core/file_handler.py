@@ -24,7 +24,7 @@ def get_base_filename(filepath: str) -> str:
 
 
 def user_data_path(relative_path) -> str:
-    """ """
+    """Return an absolute path for a file in the user's data directory."""
     if os.path.isabs(relative_path):
         return os.path.normpath(relative_path)
 

@@ -22,7 +22,7 @@ def config(tmp_path):
     c["app"] = {"name": "TestApp", "version": "1.0", "author": "Tester"}
     c["paths"] = {
         "data_dir": str(tmp_path / "data"),
-        "default_export_dir": str(tmp_path / "exports"),
+        "export_dir": str(tmp_path / "exports"),
     }
     c["user"] = {"author": "Test Author"}
     c["language"] = {

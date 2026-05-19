@@ -31,7 +31,7 @@ def test_missing_config_creates_default_file(config_path, tmp_path, monkeypatch)
     assert config_path.exists()
     assert cfg.appname == "Anuvad"
     assert cfg.appversion == "1.0"
-    assert cfg.author == "Anonymous"
+    assert cfg.author == "Purbayan Chowdhury(chowdhury.purbayan@gmail.com)"
     assert cfg.default_source_lang == "en"
     assert cfg.default_target_lang == "bn"
     assert cfg.auto_detect is True
@@ -99,3 +99,15 @@ def test_tr_uses_configured_ui_language(app_config, monkeypatch):
     app_config.set("ui", "language", "bn")
 
     assert app_config.tr("greeting", name="Anuvad") == "bn:greeting:Anuvad"
+
+
+def test_get_icon_uses_resource_paths_and_cache(app_config, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    first = app_config.get_icon("save")
+    second = app_config.get_icon("save")
+    fallback = app_config.get_icon("missing")
+
+    assert first is second
+    assert not first.isNull()
+    assert not fallback.isNull()

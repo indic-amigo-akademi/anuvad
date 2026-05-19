@@ -57,6 +57,9 @@ class MainWindow(QMainWindow):
         self.editor_screen.load_current()
         self.stack.setCurrentWidget(self.editor_screen)
 
+    def close_window(self):
+        self.close()
+
     def create_menu(self):
         menubar: QMenuBar = self.menuBar()
         if not menubar:
@@ -87,7 +90,7 @@ class MainWindow(QMainWindow):
 
         exit_action = QAction(self.config.tr("exit"), self)
         exit_action.setShortcut("Ctrl+Q")
-        exit_action.triggered.connect(self.close)
+        exit_action.triggered.connect(self.close_window)
 
         file_menu.addAction(new_action)
         file_menu.addAction(open_action)
@@ -105,15 +108,23 @@ class MainWindow(QMainWindow):
         if not settings_menu:
             return
 
-        light_theme_action = QAction(self.config.tr("light_theme"), self)
+        theme_menu = settings_menu.addMenu(self.config.tr("theme"))
+        theme_group = QActionGroup(self)
+        theme_group.setExclusive(True)
+        #
+        light_theme_action = QAction(self.config.tr("light"), self)
         light_theme_action.triggered.connect(self.set_light_theme)
-
-        dark_theme_action = QAction(self.config.tr("dark_theme"), self)
+        light_theme_action.setCheckable(True)
+        light_theme_action.setChecked(self.config.theme == "light")
+        theme_group.addAction(light_theme_action)
+        theme_menu.addAction(light_theme_action)
+        #
+        dark_theme_action = QAction(self.config.tr("dark"), self)
         dark_theme_action.triggered.connect(self.set_dark_theme)
-
-        settings_menu.addAction(light_theme_action)
-        settings_menu.addAction(dark_theme_action)
-        settings_menu.addSeparator()
+        dark_theme_action.setCheckable(True)
+        dark_theme_action.setChecked(self.config.theme == "dark")
+        theme_group.addAction(dark_theme_action)
+        theme_menu.addAction(dark_theme_action)
 
         language_menu = settings_menu.addMenu(self.config.tr("app_language"))
         language_group = QActionGroup(self)

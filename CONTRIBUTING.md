@@ -22,6 +22,7 @@ Thanks for helping improve Anuvad. This project is a desktop translation workben
 
     ```bash
     pip install -r requirements.txt
+    pip install -r requirements-dev.txt
     ```
 
 4. Run the app:
@@ -68,6 +69,13 @@ Before opening a pull request, also run:
 
 ```bash
 git diff --check
+```
+
+For packaging changes, build locally and record the bundle size:
+
+```powershell
+.\scripts\build.ps1
+.\scripts\size-report.ps1
 ```
 
 If a test cannot run because of missing local data or an existing test setup issue, mention that clearly in the pull request.

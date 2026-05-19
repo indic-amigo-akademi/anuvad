@@ -1,6 +1,6 @@
 # core/language.py
+import unicodedata
 
-from langdetect import detect, LangDetectException
 from indic_transliteration import sanscript
 from indic_transliteration.sanscript import transliterate
 
@@ -51,12 +51,43 @@ def get_indic_script_name(lang: str) -> str:
 
 def detect_language(text: str) -> str:
     """
-    Detects language code from text
+    Detects language code from text using native Unicode script identification.
+    This is a lightweight alternative to langdetect that works well for 
+    distinguishing Indic scripts and Latin text.
     """
-    try:
-        return detect(text)
-    except LangDetectException:
+    if not text:
         return "unknown"
+
+    script_map = {
+        "LATIN": "en",
+        "DEVANAGARI": "hi",
+        "BENGALI": "bn",
+        "GURMUKHI": "pa",
+        "GUJARATI": "gu",
+        "ORIYA": "or",
+        "TAMIL": "ta",
+        "TELUGU": "te",
+        "KANNADA": "kn",
+        "MALAYALAM": "ml",
+    }
+
+    counts: dict[str, int] = {}
+    # Analyze up to 1000 characters for efficiency
+    for char in text[:1000]:
+        if char.isalpha():
+            try:
+                # unicodedata.name returns strings like "DEVANAGARI LETTER A"
+                script = unicodedata.name(char).split(' ')[0]
+                counts[script] = counts.get(script, 0) + 1
+            except (ValueError, IndexError):
+                continue
+
+    if not counts:
+        return "unknown"
+
+    # Return the language code associated with the most frequent script
+    predominant_script = max(counts, key=lambda script: counts[script])
+    return script_map.get(predominant_script, "unknown")
 
 
 def is_latin(text: str) -> bool:

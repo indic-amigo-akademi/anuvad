@@ -5,6 +5,9 @@ from datetime import datetime, timezone
 from core.file_handler import read_abd_file, save_structured_file, save_translated_file
 from core.config import AppConfig
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TranslationModel:
@@ -237,7 +240,9 @@ class TranslationModel:
                         os.remove(old_tgt)
             except OSError as e:
                 # Best-effort cleanup: keep metadata update successful even if old file removal fails.
-                print(f"Warning: failed to remove old translation files for '{old_name}': {e}")
+                logger.warning(
+                    f"Failed to remove old translation files for '{old_name}': {e}"
+                )
 
     # ---------------------------
     # 🔹 SAVING

@@ -47,7 +47,7 @@ class TranslationTableModel(QAbstractTableModel):
             return 0
         return 3
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return None
 
@@ -58,26 +58,37 @@ class TranslationTableModel(QAbstractTableModel):
         idx, source_text = self.translation_model.source_data[row]
         translated = self.translation_model.get_translation(idx) or ""
 
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
                 return str(idx)
             if index.column() == 1:
                 return source_text
             return translated
 
-        if role == Qt.UserRole:
+        if role == Qt.ItemDataRole.UserRole:
             return row
 
-        if role == Qt.BackgroundRole and index.column() == 2 and translated.strip():
+        if (
+            role == Qt.ItemDataRole.BackgroundRole
+            and index.column() == 2
+            and translated.strip()
+        ):
             return QColor("lightgreen")
 
-        if role == Qt.ForegroundRole and index.column() == 2 and translated.strip():
+        if (
+            role == Qt.ItemDataRole.ForegroundRole
+            and index.column() == 2
+            and translated.strip()
+        ):
             return QColor("black")
 
         return None
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if role != Qt.DisplayRole or orientation != Qt.Horizontal:
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        if (
+            role != Qt.ItemDataRole.DisplayRole
+            or orientation != Qt.Orientation.Horizontal
+        ):
             return None
 
         if section == 0:
@@ -93,8 +104,8 @@ class TranslationTableModel(QAbstractTableModel):
 
     def flags(self, index):
         if not index.isValid():
-            return Qt.NoItemFlags
-        return Qt.ItemIsSelectable | Qt.ItemIsEnabled
+            return Qt.ItemFlag.NoItemFlags
+        return Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
 
     def refresh(self):
         self.beginResetModel()
@@ -114,10 +125,14 @@ class TranslationFilterProxyModel(QSortFilterProxyModel):
         if not self.search_text:
             return True
 
-        source_index = self.sourceModel().index(source_row, 1, source_parent)
-        target_index = self.sourceModel().index(source_row, 2, source_parent)
-        source_text = source_index.data(Qt.DisplayRole) or ""
-        translated = target_index.data(Qt.DisplayRole) or ""
+        source_model = self.sourceModel()
+        if not source_model:
+            return False
+
+        source_index = source_model.index(source_row, 1, source_parent)
+        target_index = source_model.index(source_row, 2, source_parent)
+        source_text = source_index.data(Qt.ItemDataRole.DisplayRole) or ""
+        translated = target_index.data(Qt.ItemDataRole.DisplayRole) or ""
 
         return (
             self.search_text in source_text.lower()
@@ -193,10 +208,12 @@ class ListScreen(QWidget):
 
         self.table = QTableView()
         self.table.setModel(self.filter_model)
-        self.table.horizontalHeader().setStretchLastSection(True)
+        horizontalHeader = self.table.horizontalHeader()
+        if horizontalHeader is not None:
+            horizontalHeader.setStretchLastSection(True)
         self.table.setSelectionBehavior(self.table.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table.doubleClicked.connect(self.handle_double_click)
         self.table.customContextMenuRequested.connect(self.show_context_menu)
 
@@ -229,7 +246,7 @@ class ListScreen(QWidget):
         self.search_input.setPlaceholderText(self.config.tr("search_placeholder"))
         self.clear_search_btn.setText(self.config.tr("clear"))
         self.open_btn.setText(self.config.tr("open_selected"))
-        self.table_model.headerDataChanged.emit(Qt.Horizontal, 0, 2)
+        self.table_model.headerDataChanged.emit(Qt.Orientation.Horizontal, 0, 2)
         self.show_progress()
 
     # ---------------------------
@@ -322,7 +339,7 @@ class ListScreen(QWidget):
         index = self.filter_model.index(table_row, 0)
         if not index.isValid():
             return None
-        return index.data(Qt.UserRole)
+        return index.data(Qt.ItemDataRole.UserRole)
 
     def selected_rows(self):
         rows = set()
@@ -378,7 +395,9 @@ class ListScreen(QWidget):
             self.config.tr("clean_and_auto_translate_items", suffix=suffix)
         )
 
-        action = menu.exec_(self.table.viewport().mapToGlobal(position))
+        viewport = self.table.viewport()
+        if viewport is not None:
+            action = menu.exec_(viewport.mapToGlobal(position))
 
         if action == clean_action:
             self.clean_selected_translations()
@@ -464,7 +483,7 @@ class ListScreen(QWidget):
             len(items),
             self,
         )
-        self.translation_progress.setWindowModality(Qt.WindowModal)
+        self.translation_progress.setWindowModality(Qt.WindowModality.WindowModal)
         self.translation_progress.setMinimumDuration(0)
 
         self.translation_thread = QThread(self)
@@ -472,6 +491,8 @@ class ListScreen(QWidget):
             items,
             self.model.src_lang,
             self.model.target_lang,
+            model=self.config.translate_model,
+            api_key=self.config.translate_api_key,
         )
         self.translation_worker.moveToThread(self.translation_thread)
 
@@ -533,12 +554,12 @@ class ListScreen(QWidget):
     def open_selected(self):
         current_index = self.table.currentIndex()
         if current_index.isValid():
-            model_row = current_index.data(Qt.UserRole)
+            model_row = current_index.data(Qt.ItemDataRole.UserRole)
             if model_row is not None:
                 self.open_editor.emit(model_row)
 
     def handle_double_click(self, index):
-        model_row = index.data(Qt.UserRole)
+        model_row = index.data(Qt.ItemDataRole.UserRole)
         if model_row is not None:
             self.open_editor.emit(model_row)
 

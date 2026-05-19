@@ -15,6 +15,7 @@ from ui.editor_screen import EditorScreen
 from ui.custom_widget import MetadataEditDialog
 from core.config import AppConfig
 from core.i18n import APP_LANGUAGES
+from core.theme import APP_THEMES
 from models.translation_model import TranslationModel
 
 
@@ -112,19 +113,13 @@ class MainWindow(QMainWindow):
         theme_group = QActionGroup(self)
         theme_group.setExclusive(True)
         #
-        light_theme_action = QAction(self.config.tr("light"), self)
-        light_theme_action.triggered.connect(self.set_light_theme)
-        light_theme_action.setCheckable(True)
-        light_theme_action.setChecked(self.config.theme == "light")
-        theme_group.addAction(light_theme_action)
-        theme_menu.addAction(light_theme_action)
-        #
-        dark_theme_action = QAction(self.config.tr("dark"), self)
-        dark_theme_action.triggered.connect(self.set_dark_theme)
-        dark_theme_action.setCheckable(True)
-        dark_theme_action.setChecked(self.config.theme == "dark")
-        theme_group.addAction(dark_theme_action)
-        theme_menu.addAction(dark_theme_action)
+        for theme in APP_THEMES:
+            theme_action = QAction(self.config.tr(theme), self)
+            theme_action.triggered.connect(lambda checked=False, t=theme: self.set_app_theme(t))
+            theme_action.setCheckable(True)
+            theme_action.setChecked(self.config.theme == theme)
+            theme_group.addAction(theme_action)
+            theme_menu.addAction(theme_action)
 
         language_menu = settings_menu.addMenu(self.config.tr("app_language"))
         language_group = QActionGroup(self)
@@ -168,12 +163,10 @@ class MainWindow(QMainWindow):
                 self.config.tr("save_before_project"),
             )
 
-    def set_light_theme(self):
-        self.config.set("ui", "theme", "light")
-        self.setStyleSheet(self.config.get_theme_stylesheet())
-
-    def set_dark_theme(self):
-        self.config.set("ui", "theme", "dark")
+    def set_app_theme(self, theme):
+        if theme == self.config.theme:
+            return
+        self.config.set("ui", "theme", theme)
         self.setStyleSheet(self.config.get_theme_stylesheet())
 
     def set_app_language(self, language):
@@ -199,7 +192,7 @@ class MainWindow(QMainWindow):
 
         dlg = MetadataEditDialog(
             name=self.model.base_filename,
-            author=self.model.author,
+            author=self.model.author or "",
             title=self.config.tr("edit_metadata"),
             name_label=self.config.tr("project_name"),
             author_label=self.config.tr("project_author"),

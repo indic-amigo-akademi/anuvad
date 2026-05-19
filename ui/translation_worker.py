@@ -11,18 +11,20 @@ class TranslationWorker(QObject):
     error = pyqtSignal(str)
     finished = pyqtSignal(bool)
 
-    def __init__(self, items, source_lang, target_lang):
+    def __init__(self, items, source_lang, target_lang, model="google", api_key=None):
         super().__init__()
         self.items = items
         self.source_lang = source_lang
         self.target_lang = target_lang
         self._cancelled = False
+        self.model = model
+        self.__api_key = api_key
 
     def cancel(self):
         self._cancelled = True
 
     def run(self):
-        translator = TranslateClient()
+        translator = TranslateClient(model=self.model, api_key=self.__api_key)
         total = len(self.items)
 
         for position, item in enumerate(self.items, start=1):

@@ -59,6 +59,13 @@ class AppConfig:
             os.makedirs(export_dir_path)
         return export_dir_path
 
+    @property
+    def logs_dir(self):
+        logs_dir_path = user_data_path(self.get("paths", "logs_dir", "logs") or "logs")
+        if not os.path.exists(logs_dir_path):
+            os.makedirs(logs_dir_path)
+        return logs_dir_path
+
     # ---------------------------
     # 🔹 User
     # ---------------------------
@@ -80,6 +87,18 @@ class AppConfig:
     @property
     def auto_detect(self):
         return self.get_bool("language", "auto_detect", True)
+
+    @property
+    def translate_model(self):
+        return self.get("language", "translate_model", "google") or "google"
+    
+    @property
+    def translate_api_key(self):
+        if self.translate_model == "microsoft":
+            return self.get("language", "msft_api_key", "")
+        elif self.translate_model == "libre":
+            return self.get("language", "libre_api_key", "")
+        return None
 
     # ---------------------------
     # 🔹 UI

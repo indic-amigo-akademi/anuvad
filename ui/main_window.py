@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QActionGroup,
     QMessageBox,
     QMenuBar,
+    QFileDialog,
 )
 
 from ui.upload_screen import UploadScreen
@@ -82,6 +83,9 @@ class MainWindow(QMainWindow):
         open_action.setShortcut("Ctrl+O")
         open_action.triggered.connect(self.go_to_upload)
 
+        export_action = QAction(self.config.tr("export"), self)
+        export_action.triggered.connect(self.export_project)
+
         save_action = QAction(self.config.tr("save"), self)
         save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self.save_current)
@@ -97,6 +101,7 @@ class MainWindow(QMainWindow):
         file_menu.addAction(open_action)
         file_menu.addSeparator()
         file_menu.addAction(save_action)
+        file_menu.addAction(export_action)
         file_menu.addSeparator()
         file_menu.addAction(metadata_action)
         file_menu.addSeparator()
@@ -110,18 +115,24 @@ class MainWindow(QMainWindow):
             return
 
         theme_menu = settings_menu.addMenu(self.config.tr("theme"))
+        if not theme_menu:
+            return
         theme_group = QActionGroup(self)
         theme_group.setExclusive(True)
         #
         for theme in APP_THEMES:
             theme_action = QAction(self.config.tr(theme), self)
-            theme_action.triggered.connect(lambda checked=False, t=theme: self.set_app_theme(t))
+            theme_action.triggered.connect(
+                lambda checked=False, t=theme: self.set_app_theme(t)
+            )
             theme_action.setCheckable(True)
             theme_action.setChecked(self.config.theme == theme)
             theme_group.addAction(theme_action)
             theme_menu.addAction(theme_action)
 
         language_menu = settings_menu.addMenu(self.config.tr("app_language"))
+        if not language_menu:
+            return
         language_group = QActionGroup(self)
         language_group.setExclusive(True)
         for code, label in APP_LANGUAGES.items():
@@ -148,6 +159,41 @@ class MainWindow(QMainWindow):
 
     def go_to_upload(self):
         self.stack.setCurrentWidget(self.upload_screen)
+
+    def export_project(self):
+        current_widget = self.stack.currentWidget()
+        if current_widget == self.editor_screen or current_widget == self.list_screen:
+            file_dialog = QFileDialog(self)
+            file_dialog.setAcceptMode(QFileDialog.AcceptSave)
+            file_dialog.setNameFilters(["PDF Files (*.pdf)", "Text Files (*.txt)"])
+            if file_dialog.exec_():
+                file_path = file_dialog.selectedFiles()[0]
+                success, message = self.model.export_translations(file_path)
+                if success:
+                    QMessageBox.information(
+                        self,
+                        self.config.tr("export"),
+                        self.config.tr("export_success", filename=file_path),
+                    )
+                else:
+                    QMessageBox.warning(
+                        self,
+                        self.config.tr("export"),
+                        self.config.tr("export_failed", error=message),
+                    )
+            else:
+                QMessageBox.information(
+                    self,
+                    self.config.tr("export"),
+                    self.config.tr("export_cancelled"),
+                )
+        else:
+            QMessageBox.information(
+                self,
+                self.config.tr("export"),
+                self.config.tr("export_before_project"),
+            )
+            return
 
     def save_current(self):
         current_widget = self.stack.currentWidget()
@@ -191,18 +237,26 @@ class MainWindow(QMainWindow):
             return
 
         dlg = MetadataEditDialog(
+            dialog_title=self.config.tr("edit_metadata"),
+            title=self.model.title,
             name=self.model.base_filename,
             author=self.model.author or "",
-            title=self.config.tr("edit_metadata"),
+            title_label=self.config.tr("project_title"),
             name_label=self.config.tr("project_name"),
             author_label=self.config.tr("project_author"),
             parent=self,
         )
         if dlg.exec_():
+            new_title = dlg.project_title
             new_name = dlg.project_name
             new_author = dlg.project_author
             if new_name and new_author:
-                self.model.update_metadata(new_name, new_author, self.config.data_dir)
+                self.model.update_metadata(
+                    title=new_title,
+                    name=new_name,
+                    author=new_author,
+                    data_dir=self.config.data_dir,
+                )
                 QMessageBox.information(
                     self,
                     self.config.tr("success"),

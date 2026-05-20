@@ -66,6 +66,15 @@ class AppConfig:
             os.makedirs(logs_dir_path)
         return logs_dir_path
 
+    @property
+    def font_dir(self):
+        font_dir_path = user_data_path(
+            self.get("paths", "font_dir", "fonts") or "fonts"
+        )
+        if not os.path.exists(font_dir_path):
+            os.makedirs(font_dir_path)
+        return font_dir_path
+
     # ---------------------------
     # 🔹 User
     # ---------------------------
@@ -91,7 +100,7 @@ class AppConfig:
     @property
     def translate_model(self):
         return self.get("language", "translate_model", "google") or "google"
-    
+
     @property
     def translate_api_key(self):
         if self.translate_model == "microsoft":

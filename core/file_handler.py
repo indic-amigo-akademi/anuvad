@@ -4,6 +4,7 @@ from typing import List, Tuple, Dict
 import os
 import re
 import sys
+import json
 from pathlib import Path
 
 QSS_URL_RE = re.compile(r"url\((['\"]?)([^)'\"\n]+)\1\)")
@@ -217,3 +218,46 @@ def read_abd_metadata(filepath):
             metadata[key.strip()] = value.strip()
 
     return metadata
+
+
+def create_pdf_export(
+    filepath, metadata: dict, data: List[Tuple[int, str]], font_dir="fonts"
+):
+    from fpdf import FPDF
+
+    title = metadata.get("title", "Untitled")
+    language = metadata.get("language", "en")
+    if language in ["hi", "mr", "ne"]:
+        font_name = "lohit_hi.ttf"
+    elif language in ["bn", "as"]:
+        font_name = "lohit_bn.ttf"
+    elif language in ["gu"]:
+        font_name = "lohit_gu.ttf"
+    elif language in ["ta"]:
+        font_name = "lohit_ta.ttf"
+    else:
+        font_name = "NirmalaText.ttf"  # default to Hindi font for unknown languages
+
+    # print(metadata)
+
+    pdf = FPDF()
+    pdf.set_text_shaping(True)
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.add_font(
+        "IndicFont", "", user_data_path(os.path.join(font_dir, font_name))
+    )
+
+    # Title
+    pdf.set_font("IndicFont", size=16)
+
+    pdf.cell(0, 10, title, align="C")
+    pdf.ln(10)
+
+    # Content
+    pdf.set_font("IndicFont", size=12)
+    for idx, text in data:
+        pdf.multi_cell(0, 10, f"{text}")
+        pdf.ln(5)
+
+    pdf.output(filepath)

@@ -73,23 +73,27 @@ class ComboInputDialog(QDialog):
 class MetadataEditDialog(QDialog):
     def __init__(
         self,
+        dialog_title: str,
+        title: str,
         name: str,
         author: str,
-        title: str,
+        title_label: str,
         name_label: str,
         author_label: str,
         parent=None,
     ):
         super().__init__(parent)
-        self.setWindowTitle(title)
+        self.setWindowTitle(dialog_title)
         self.setMinimumWidth(400)
 
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
 
         form = QFormLayout()
+        self.title_edit = QLineEdit(title)
         self.name_edit = QLineEdit(name)
         self.author_edit = QLineEdit(author)
+        form.addRow(f"{title_label}:", self.title_edit)
         form.addRow(f"{name_label}:", self.name_edit)
         form.addRow(f"{author_label}:", self.author_edit)
         layout.addLayout(form)
@@ -100,6 +104,10 @@ class MetadataEditDialog(QDialog):
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
+
+    @property
+    def project_title(self):
+        return self.title_edit.text().strip()
 
     @property
     def project_name(self):

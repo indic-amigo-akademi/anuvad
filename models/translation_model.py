@@ -117,6 +117,8 @@ class TranslationModel:
 
         self.translations = {idx: text for idx, text in data}
         self.target_lang = metadata.get("language", target_lang)
+        self.title = metadata.get("title", "")
+        self.author = metadata.get("author", self.config.author)
         self.current_index = 0
         self.created_at = metadata.get("created_at")
         self.last_modified = metadata.get("last_modified")
@@ -224,20 +226,19 @@ class TranslationModel:
     # 🔹 METADATA
     # ---------------------------
     def update_metadata(
-        self, title: str = "Untitled", name: str = "project", author: str = "Anonymous", data_dir: str = "data"
+        self,
+        title: str = "Untitled",
+        name: str = "project",
+        author: str = "Anonymous",
+        data_dir: str = "data",
     ):
         old_name = self.base_filename
         self.title = title
         self.base_filename = name
         self.author = author
 
-        self.save_source_file(output_dir=data_dir)
-
-        current_target = self.target_lang
-        for tgt_lang in self.avl_tgt_langs:
-            self.target_lang = tgt_lang
-            self.save_target_file(output_dir=data_dir)
-        self.target_lang = current_target
+        # self.save_source_file(output_dir=data_dir)
+        self.save_target_file(output_dir=data_dir)
 
         if old_name and old_name != name:
             try:
@@ -258,11 +259,14 @@ class TranslationModel:
     # 🔹 SAVING
     # ---------------------------
     def save_source_file(self, output_dir: str = "data"):
+        metadata = self.metadata
+        metadata["role"] = "source"
+        metadata["language"] = ""
         save_structured_file(
             self.base_filename,
             self.src_lang,
             self.source_data,
-            metadata=self.metadata,
+            metadata=metadata,
             output_dir=output_dir,
         )
 
@@ -305,8 +309,9 @@ class TranslationModel:
             elif ext.lower() == ".pdf":
                 create_pdf_export(
                     export_file_path,
-                    self.metadata,
-                    list(self.translations.items()),
+                    config=self.config,
+                    metadata=self.metadata,
+                    data=list(self.translations.items()),
                     font_dir=self.config.font_dir,
                 )
         except Exception as e:

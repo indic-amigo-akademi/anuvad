@@ -48,7 +48,13 @@ if __name__ == "__main__":
         ),
     )
 
-    if os.name == "nt":
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("iaa.anuvad.app")
+    try:
+        if os.name == "nt":
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                "iaa.anuvad.app"
+            )
 
-    main()
+        main()
+    except Exception as e:
+        logging.exception("An unhandled exception occurred: %s", str(e))
+        raise

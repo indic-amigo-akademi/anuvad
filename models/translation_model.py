@@ -303,15 +303,19 @@ class TranslationModel:
         try:
             _, ext = os.path.splitext(export_file_path)
             if ext.lower() == ".txt":
-                text_content = "\n\n".join(self.translations.values())
+                # Ensure export follows the order of source segments
+                text_segments = [self.translations.get(idx, "") for idx, _ in self.source_data]
+                text_content = "\n\n".join(text_segments)
                 with open(export_file_path, "w", encoding="utf-8") as f:
                     f.write(text_content)
             elif ext.lower() == ".pdf":
+                # Ensure export follows the order of source segments
+                export_data = [(idx, self.translations.get(idx, "")) for idx, _ in self.source_data]
                 create_pdf_export(
                     export_file_path,
                     config=self.config,
                     metadata=self.metadata,
-                    data=list(self.translations.items()),
+                    data=export_data,
                     font_dir=self.config.font_dir,
                 )
         except Exception as e:

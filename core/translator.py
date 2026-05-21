@@ -20,10 +20,11 @@ SUPPORTED_TRANSLATION_MODELS = [
 
 
 class TranslateClient:
-    def __init__(self, model="google", api_key=None):
+    def __init__(self, model="google", **kwargs):
         self._translators = {}
         self.model = model
-        self.__api_key = api_key
+        # self.__api_key = api_key
+        self.__kwargs = kwargs
 
         if model not in SUPPORTED_TRANSLATION_MODELS:
             raise ValueError(f"Unsupported translation model: {model}")
@@ -57,10 +58,10 @@ class TranslateClient:
                 self._translators[key] = PonsTranslator(source=source, target=target)
             elif self.model == "microsoft":
                 self._translators[key] = MicrosoftTranslator(
-                    source=source, target=target, api_key=self.__api_key, region="centralindia"
+                    source=source, target=target, **self.__kwargs
                 )
             elif self.model == "libre":
-                self._translators[key] = LibreTranslator(source=source, target=target, custom_url="https://libretranslate.com/")
+                self._translators[key] = LibreTranslator(source=source, target=target, **self.__kwargs)
             else:
                 raise ValueError(f"Unsupported translation model: {self.model}")
         return self._translators[key]

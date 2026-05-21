@@ -9,6 +9,7 @@ ROOT = Path(SPECPATH).parent
 datas = [
     (str(ROOT / "app.cfg"), "."),
     (str(ROOT / "assets" / "icons"), "assets/icons"),
+    (str(ROOT / "assets" / "fonts"), "assets/fonts"),
     (str(ROOT / "assets" / "images" / "icon.ico"), "assets/images"),
     (str(ROOT / "assets" / "i18n"), "assets/i18n"),
     (str(ROOT / "assets" / "qss"), "assets/qss"),

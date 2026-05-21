@@ -268,7 +268,7 @@ class EditorScreen(QWidget):
             src_lang,
             tgt_lang,
             model=self.config.translate_model,
-            api_key=self.config.translate_api_key
+            **self.config.translate_api_config,
         )
         self.translation_worker.moveToThread(self.translation_thread)
 

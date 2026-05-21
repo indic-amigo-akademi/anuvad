@@ -102,12 +102,15 @@ class AppConfig:
         return self.get("language", "translate_model", "google") or "google"
 
     @property
-    def translate_api_key(self):
+    def translate_api_config(self):
         if self.translate_model == "microsoft":
-            return self.get("language", "msft_api_key", "")
+            return {
+                "api_key": self.get("language", "msft_api_key", ""),
+                "region": self.get("language", "msft_region", ""),
+            }
         elif self.translate_model == "libre":
-            return self.get("language", "libre_api_key", "")
-        return None
+            return {"api_key": self.get("language", "libre_api_key", ""), "custom_url": self.get("language", "libre_api_url", "https://libretranslate.com/")}
+        return {}
 
     # ---------------------------
     # 🔹 UI

@@ -240,12 +240,12 @@ def create_pdf_export(
     elif language in ["ta"]:
         font_name = "lohit_ta.ttf"
     else:
-        font_name = "NirmalaText.ttf"
+        font_name = "nirmala_text.ttf"
 
     pdf = FPDF()
     pdf.set_text_shaping(True)
     pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.add_font("IndicFont", "", user_data_path(os.path.join(font_dir, font_name)))
+    pdf.add_font("IndicFont", "", resource_path(os.path.join(font_dir, font_name)))
 
     # Title Page
     pdf.add_page()
@@ -255,7 +255,9 @@ def create_pdf_export(
     pdf.cell(0, 10, title, align="C")
     pdf.ln(20)
     pdf.set_font("IndicFont", size=18)
-    pdf.cell(0, 10, f"{config.tr('by', lang=language)} {author}", align="C")
+    pdf.cell(0, 10, f"{author}", align="C")
+    pdf.ln(20)
+    pdf.set_font("IndicFont", size=12)
 
     # Content
     pdf.add_page()

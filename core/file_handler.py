@@ -4,7 +4,6 @@ from typing import List, Tuple, Dict
 import os
 import re
 import sys
-import json
 from pathlib import Path
 
 QSS_URL_RE = re.compile(r"url\((['\"]?)([^)'\"\n]+)\1\)")

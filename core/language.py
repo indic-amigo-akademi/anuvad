@@ -2,7 +2,6 @@
 import unicodedata
 import logging
 
-from enum import Enum
 from indic_transliteration import sanscript
 from indic_transliteration.sanscript import transliterate
 from deep_translator import single_detection

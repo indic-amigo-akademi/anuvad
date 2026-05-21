@@ -46,13 +46,13 @@ class TranslateClient:
                 self._translators[key] = GoogleTranslator(source=source, target=target)
             elif self.model == "mymemory":
                 self._translators[key] = MyMemoryTranslator(
-                    source=SUPPORTED_LANGUAGES[source].lower(),
-                    target=SUPPORTED_LANGUAGES[target].lower(),
+                    source=SUPPORTED_LANGUAGES.get(source, "en").lower(),
+                    target=SUPPORTED_LANGUAGES.get(target, "bn").lower(),
                 )
             elif self.model == "linguee":
                 self._translators[key] = LingueeTranslator(
-                    source=SUPPORTED_LANGUAGES[source].lower(),
-                    target=SUPPORTED_LANGUAGES[target].lower(),
+                    source=SUPPORTED_LANGUAGES.get(source, "en").lower(),
+                    target=SUPPORTED_LANGUAGES.get(target, "fr").lower(),
                 )
             elif self.model == "pons":
                 self._translators[key] = PonsTranslator(source=source, target=target)

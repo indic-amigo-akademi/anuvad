@@ -21,7 +21,7 @@
     "export_before_project": "রপ্তানি করার আগে একটি প্রকল্প খুলুন।",
     "export_cancelled": "রপ্তানি বাতিল করা হয়েছে।",
     "export_failed": "অনুবাদ রপ্তানি করতে ব্যর্থ হয়েছে: {error}",
-    "export_success": "{filename}: অনুবাদ সফলভাবে রপ্তানি করা হয়েছে।",
+    "export_success": "অনুবাদ সফলভাবে রপ্তানি করা হয়েছে: {filename}।",
     "file": "ফাইল",
     "help": "সহায়তা",
     "item": "আইটেম",

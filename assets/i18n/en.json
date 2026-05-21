@@ -21,7 +21,7 @@
     "export_before_project": "Please open a project before exporting.",
     "export_cancelled": "Export cancelled.",
     "export_failed": "Failed to export translations: {error}",
-    "export_success": "{filename}: Translations exported successfully.",
+    "export_success": "Translations exported successfully: {filename}.",
     "file": "File",
     "help": "Help",
     "item": "Item",

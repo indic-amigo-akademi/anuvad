@@ -21,7 +21,7 @@
     "export_before_project": "निर्यात करने से पहले कृपया एक प्रोजेक्ट खोलें।",
     "export_cancelled": "निर्यात रद्द कर दिया गया।",
     "export_failed": "अनुवाद निर्यात करने में विफल: {error}",
-    "export_success": "{filename}: अनुवाद सफलतापूर्वक निर्यात किया गया।",
+    "export_success": "अनुवाद सफलतापूर्वक निर्यात किया गया: {filename}।",
     "file": "फाइल",
     "help": "सहायता",
     "item": "आइटम",

@@ -59,6 +59,22 @@ class AppConfig:
             os.makedirs(export_dir_path)
         return export_dir_path
 
+    @property
+    def logs_dir(self):
+        logs_dir_path = user_data_path(self.get("paths", "logs_dir", "logs") or "logs")
+        if not os.path.exists(logs_dir_path):
+            os.makedirs(logs_dir_path)
+        return logs_dir_path
+
+    @property
+    def font_dir(self):
+        font_dir_path = user_data_path(
+            self.get("paths", "font_dir", "fonts") or "fonts"
+        )
+        if not os.path.exists(font_dir_path):
+            os.makedirs(font_dir_path)
+        return font_dir_path
+
     # ---------------------------
     # 🔹 User
     # ---------------------------
@@ -80,6 +96,21 @@ class AppConfig:
     @property
     def auto_detect(self):
         return self.get_bool("language", "auto_detect", True)
+
+    @property
+    def translate_model(self):
+        return self.get("language", "translate_model", "google") or "google"
+
+    @property
+    def translate_api_config(self):
+        if self.translate_model == "microsoft":
+            return {
+                "api_key": self.get("language", "msft_api_key", ""),
+                "region": self.get("language", "msft_region", ""),
+            }
+        elif self.translate_model == "libre":
+            return {"api_key": self.get("language", "libre_api_key", ""), "custom_url": self.get("language", "libre_api_url", "https://libretranslate.com/")}
+        return {}
 
     # ---------------------------
     # 🔹 UI
@@ -140,8 +171,10 @@ class AppConfig:
         if section == "ui":
             self._stylesheet_cache.clear()
 
-    def tr(self, key: str, **kwargs) -> str:
-        return translate(key, self.ui_language or "en", **kwargs)
+    def tr(self, key: str, lang=None, **kwargs) -> str:
+        if lang is None:
+            lang = self.ui_language
+        return translate(key, lang or "en", **kwargs)
 
     def get_icon(self, name, color="light"):
         cache_key = (name, color)

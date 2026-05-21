@@ -259,7 +259,7 @@ class EditorScreen(QWidget):
             1,
             self,
         )
-        self.translation_progress.setWindowModality(Qt.WindowModal)
+        self.translation_progress.setWindowModality(Qt.WindowModality.WindowModal)
         self.translation_progress.setMinimumDuration(0)
 
         self.translation_thread = QThread(self)
@@ -267,6 +267,8 @@ class EditorScreen(QWidget):
             [(current_id, source_text)],
             src_lang,
             tgt_lang,
+            model=self.config.translate_model,
+            **self.config.translate_api_config,
         )
         self.translation_worker.moveToThread(self.translation_thread)
 

@@ -2,9 +2,17 @@
 
 from typing import List, Tuple, Dict, Optional
 from datetime import datetime, timezone
-from core.file_handler import read_abd_file, save_structured_file, save_translated_file
+from core.file_handler import (
+    read_abd_file,
+    save_structured_file,
+    save_translated_file,
+    create_pdf_export,
+)
 from core.config import AppConfig
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TranslationModel:
@@ -25,9 +33,10 @@ class TranslationModel:
         self.last_modified = datetime.now(tz=timezone.utc)
 
         return {
+            "title": self.title,
             "name": self.base_filename,
             "author": self.author,
-            "role": "source",
+            "role": "source" if self.target_lang == "" else "translated",
             "language": self.target_lang,
             "source_language": self.src_lang,
             "created_at": self.created_at,
@@ -42,7 +51,7 @@ class TranslationModel:
         self.translations: Dict[int, str] = {}
 
         self.current_index: int = 0
-
+        self.title: str = ""
         self.base_filename: str = ""
         self.src_lang: str = ""
         self.target_lang: str = ""
@@ -86,6 +95,7 @@ class TranslationModel:
         metadata, data = read_abd_file(filepath)
 
         self.source_data = data
+        self.title = metadata.get("title", "")
         self.base_filename = metadata.get("name", "unnamed")
         self.src_lang = metadata.get("source_language", src_lang)
         self.target_lang = metadata.get("language", "")
@@ -107,6 +117,8 @@ class TranslationModel:
 
         self.translations = {idx: text for idx, text in data}
         self.target_lang = metadata.get("language", target_lang)
+        self.title = metadata.get("title", "")
+        self.author = metadata.get("author", self.config.author)
         self.current_index = 0
         self.created_at = metadata.get("created_at")
         self.last_modified = metadata.get("last_modified")
@@ -213,18 +225,20 @@ class TranslationModel:
     # ---------------------------
     # 🔹 METADATA
     # ---------------------------
-    def update_metadata(self, name: str, author: str, data_dir: str):
+    def update_metadata(
+        self,
+        title: str = "Untitled",
+        name: str = "project",
+        author: str = "Anonymous",
+        data_dir: str = "data",
+    ):
         old_name = self.base_filename
+        self.title = title
         self.base_filename = name
         self.author = author
 
-        self.save_source_file(output_dir=data_dir)
-
-        current_target = self.target_lang
-        for tgt_lang in self.avl_tgt_langs:
-            self.target_lang = tgt_lang
-            self.save_target_file(output_dir=data_dir)
-        self.target_lang = current_target
+        # self.save_source_file(output_dir=data_dir)
+        self.save_target_file(output_dir=data_dir)
 
         if old_name and old_name != name:
             try:
@@ -237,17 +251,22 @@ class TranslationModel:
                         os.remove(old_tgt)
             except OSError as e:
                 # Best-effort cleanup: keep metadata update successful even if old file removal fails.
-                print(f"Warning: failed to remove old translation files for '{old_name}': {e}")
+                logger.warning(
+                    f"Failed to remove old translation files for '{old_name}': {e}"
+                )
 
     # ---------------------------
     # 🔹 SAVING
     # ---------------------------
     def save_source_file(self, output_dir: str = "data"):
+        metadata = self.metadata
+        metadata["role"] = "source"
+        metadata["language"] = ""
         save_structured_file(
             self.base_filename,
             self.src_lang,
             self.source_data,
-            metadata=self.metadata,
+            metadata=metadata,
             output_dir=output_dir,
         )
 
@@ -273,10 +292,36 @@ class TranslationModel:
         self.has_unsaved_changes = True
 
     # ---------------------------
-    # 🔹 VALIDATION
+    # 🔹 EXPORT
     # ---------------------------
     def is_ready_for_export(self) -> bool:
         return self.total_items() > 0 and self.target_lang != ""
+
+    def export_translations(self, export_file_path: str):
+        if not self.is_ready_for_export():
+            return (False, "No data to export or target language not set.")
+        try:
+            _, ext = os.path.splitext(export_file_path)
+            if ext.lower() == ".txt":
+                # Ensure export follows the order of source segments
+                text_segments = [self.translations.get(idx, "") for idx, _ in self.source_data]
+                text_content = "\n\n".join(text_segments)
+                with open(export_file_path, "w", encoding="utf-8") as f:
+                    f.write(text_content)
+            elif ext.lower() == ".pdf":
+                # Ensure export follows the order of source segments
+                export_data = [(idx, self.translations.get(idx, "")) for idx, _ in self.source_data]
+                create_pdf_export(
+                    export_file_path,
+                    config=self.config,
+                    metadata=self.metadata,
+                    data=export_data,
+                    font_dir=self.config.font_dir,
+                )
+        except Exception as e:
+            return (False, str(e))
+
+        return (True, None)
 
     # ---------------------------
     # 🔹 DEBUG / STATE INFO

@@ -1,5 +1,7 @@
 # main.py
 
+import logging
+from datetime import datetime
 import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QIcon
@@ -7,7 +9,7 @@ import ctypes
 import os
 from ui.main_window import MainWindow
 from core.config import AppConfig
-from core.file_handler import resource_path
+from core.file_handler import resource_path, user_data_path
 
 
 def on_exit(config: AppConfig):
@@ -17,7 +19,6 @@ def on_exit(config: AppConfig):
 
 
 def main():
-    config = AppConfig()
     logo_path = config.get("paths", "logo_path", "icon.ico")
 
     app = QApplication(sys.argv)
@@ -35,7 +36,25 @@ def main():
 
 
 if __name__ == "__main__":
-    if os.name == "nt":
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("iaa.anuvad.app")
+    config = AppConfig()
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        filename=user_data_path(
+            os.path.join(
+                config.logs_dir,
+                f"anuvad_{datetime.now().strftime('%Y-%m-%d')}.log",
+            )
+        ),
+    )
 
-    main()
+    try:
+        if os.name == "nt":
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                "iaa.anuvad.app"
+            )
+
+        main()
+    except Exception as e:
+        logging.exception("An unhandled exception occurred: %s", str(e))
+        raise

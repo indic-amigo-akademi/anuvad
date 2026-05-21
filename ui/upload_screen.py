@@ -189,7 +189,7 @@ class UploadScreen(QWidget):
         base_filename = get_base_filename(filepath)
 
         if self.auto_detect.isChecked():
-            src_lang = detect_language(data[0][1])
+            src_lang = detect_language(data[0][1], lang_detect_api_key=self.config.get("language", "detect_lang_api_key"))
         else:
             src_lang = self.lang_dropdown.currentData()
 

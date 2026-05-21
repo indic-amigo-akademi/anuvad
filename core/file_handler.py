@@ -217,3 +217,53 @@ def read_abd_metadata(filepath):
             metadata[key.strip()] = value.strip()
 
     return metadata
+
+
+def create_pdf_export(
+    filepath,
+    config,
+    metadata: dict,
+    data: List[Tuple[int, str]],
+    font_dir="fonts",
+):
+    from fpdf import FPDF
+
+    title = metadata.get("title", "Untitled")
+    author = metadata.get("author", "Anonymous")
+    language = metadata.get("language", "en")
+    if language in ["hi", "mr", "ne"]:
+        font_name = "lohit_hi.ttf"
+    elif language in ["bn", "as"]:
+        font_name = "lohit_bn.ttf"
+    elif language in ["gu"]:
+        font_name = "lohit_gu.ttf"
+    elif language in ["ta"]:
+        font_name = "lohit_ta.ttf"
+    else:
+        font_name = "nirmala_text.ttf"
+
+    pdf = FPDF()
+    pdf.set_text_shaping(True)
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_font("IndicFont", "", resource_path(os.path.join(font_dir, font_name)))
+
+    # Title Page
+    pdf.add_page()
+    pdf.set_font("IndicFont", size=24)
+
+    pdf.ln(40)
+    pdf.cell(0, 10, title, align="C")
+    pdf.ln(20)
+    pdf.set_font("IndicFont", size=18)
+    pdf.cell(0, 10, f"{author}", align="C")
+    pdf.ln(20)
+    pdf.set_font("IndicFont", size=12)
+
+    # Content
+    pdf.add_page()
+    pdf.set_font("IndicFont", size=12)
+    for idx, text in data:
+        pdf.multi_cell(0, 10, f"{text}")
+        pdf.ln(5)
+
+    pdf.output(filepath)

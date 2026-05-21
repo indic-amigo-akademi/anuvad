@@ -181,12 +181,6 @@ class MainWindow(QMainWindow):
                         self.config.tr("export"),
                         self.config.tr("export_failed", error=message),
                     )
-            else:
-                QMessageBox.information(
-                    self,
-                    self.config.tr("export"),
-                    self.config.tr("export_cancelled"),
-                )
         else:
             QMessageBox.information(
                 self,

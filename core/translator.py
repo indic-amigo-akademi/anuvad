@@ -61,6 +61,7 @@ class TranslateClient:
                     source=source, target=target, **self.__kwargs
                 )
             elif self.model == "libre":
+                print(f"Using Libre Translator with source: {source}, target: {target}, kwargs: {self.__kwargs}")
                 self._translators[key] = LibreTranslator(source=source, target=target, **self.__kwargs)
             else:
                 raise ValueError(f"Unsupported translation model: {self.model}")

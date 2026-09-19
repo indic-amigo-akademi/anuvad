@@ -232,7 +232,6 @@ translations, QSS, and `app.cfg`. Development tools and tests live in
 
 ```powershell
 pip install -r requirements.txt
-pip install -r requirements-dev.txt
 .\scripts\build.ps1
 .\scripts\size-report.ps1
 ```

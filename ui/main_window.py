@@ -17,6 +17,7 @@ from ui.custom_widget import MetadataEditDialog
 from core.config import AppConfig
 from core.i18n import APP_LANGUAGES
 from core.theme import APP_THEMES
+from core.translator import SUPPORTED_TRANSLATION_MODELS
 from models.translation_model import TranslationModel
 
 
@@ -114,12 +115,12 @@ class MainWindow(QMainWindow):
         if not settings_menu:
             return
 
+        # Theme
         theme_menu = settings_menu.addMenu(self.config.tr("theme"))
         if not theme_menu:
             return
         theme_group = QActionGroup(self)
         theme_group.setExclusive(True)
-        #
         for theme in APP_THEMES:
             theme_action = QAction(self.config.tr(theme), self)
             theme_action.triggered.connect(
@@ -130,6 +131,7 @@ class MainWindow(QMainWindow):
             theme_group.addAction(theme_action)
             theme_menu.addAction(theme_action)
 
+        # Language
         language_menu = settings_menu.addMenu(self.config.tr("app_language"))
         if not language_menu:
             return
@@ -144,6 +146,22 @@ class MainWindow(QMainWindow):
             )
             language_group.addAction(language_action)
             language_menu.addAction(language_action)
+
+        # Translate
+        translate_menu = settings_menu.addMenu(self.config.tr("translate"))
+        if not translate_menu:
+            return
+        translate_group = QActionGroup(self)
+        translate_group.setExclusive(True)
+        for model in SUPPORTED_TRANSLATION_MODELS:
+            translate_action = QAction(self.config.tr(model), self)
+            translate_action.setCheckable(True)
+            translate_action.setChecked(model == self.config.translate_model)
+            translate_action.triggered.connect(
+                lambda checked=False, model=model: self.set_translate_model(model)
+            )
+            translate_group.addAction(translate_action)
+            translate_menu.addAction(translate_action)
 
         # ---------------------------
         # ❓ Help Menu
@@ -214,6 +232,11 @@ class MainWindow(QMainWindow):
             return
         self.config.set("ui", "language", language)
         self.retranslate_ui()
+
+    def set_translate_model(self, model):
+        if model == self.config.translate_model:
+            return
+        self.config.set("language", "translate_model", model)
 
     def retranslate_ui(self):
         self.create_menu()

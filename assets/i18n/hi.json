@@ -60,6 +60,7 @@
     "text_files_filter": "टेक्स्ट फाइलें (*.txt)",
     "text_segments": "पाठ खंड",
     "theme": "थीम",
+    "translate": "अनुवाद",
     "translated_text": "अनूदित पाठ",
     "translating_current_item": "वर्तमान आइटम का अनुवाद हो रहा है...",
     "translating_item": "आइटम #{idx} का अनुवाद हो रहा है...",

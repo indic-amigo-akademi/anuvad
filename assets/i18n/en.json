@@ -60,6 +60,7 @@
     "text_files_filter": "Text Files (*.txt)",
     "text_segments": "Text Segments",
     "theme": "Theme",
+    "translate": "Translate",
     "translated_text": "Translated Text",
     "translating_current_item": "Translating current item...",
     "translating_item": "Translating item #{idx}...",

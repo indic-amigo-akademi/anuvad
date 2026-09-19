@@ -109,7 +109,12 @@ class AppConfig:
                 "region": self.get("language", "msft_region", ""),
             }
         elif self.translate_model == "libre":
-            return {"api_key": self.get("language", "libre_api_key", ""), "custom_url": self.get("language", "libre_api_url", "https://libretranslate.com/")}
+            res = {"custom_url": self.get("language", "libre_api_url", "https://libretranslate.com/")}
+            if self.get("language", "libre_api_key", None) is not None:
+                res["api_key"] = self.get("language", "libre_api_key", None)
+            return res
+        elif self.translate_model == "google":
+            return {"api_key": self.get("language", "google_api_key", "")}
         return {}
 
     # ---------------------------

@@ -4,9 +4,9 @@ import configparser
 import os
 
 import pytest
-from PyQt5.QtCore import Qt
-from PyQt5.QtTest import QTest
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt6.QtCore import Qt
+from PyQt6.QtTest import QTest
+from PyQt6.QtWidgets import QApplication, QWidget
 
 from core.config import AppConfig
 from models.translation_model import TranslationModel
@@ -15,7 +15,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
 class SimpleQtBot:
-    """Small qtbot-compatible helper backed by PyQt5.QtTest."""
+    """Small qtbot-compatible helper backed by PyQt6.QtTest."""
 
     def __init__(self, app):
         self.app = app

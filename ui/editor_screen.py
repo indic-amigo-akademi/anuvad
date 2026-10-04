@@ -1,6 +1,6 @@
 # ui/editor_screen.py
 
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -11,17 +11,21 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QProgressDialog,
 )
-from PyQt5.QtCore import pyqtSignal, Qt, QThread, QTimer
+from PyQt6.QtGui import QAction
+from PyQt6.QtCore import pyqtSignal, Qt, QThread, QTimer
 
 from core.config import AppConfig
 from core.language import convert_to_latin, is_latin
 from ui.translation_worker import TranslationWorker
+from ui.custom_widget import ResultDialog
+from core.translator import TranslateClient
 
 
 class EditorScreen(QWidget):
     back_to_list = pyqtSignal()
 
     def __init__(self, model, config: AppConfig):
+        
         super().__init__()
         self.model = model
         self.config = config
@@ -60,6 +64,10 @@ class EditorScreen(QWidget):
 
         self.source_text = QTextEdit()
         self.source_text.setReadOnly(True)
+        self.source_text.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.source_text.customContextMenuRequested.connect(
+            self.show_source_text_context_menu
+        )
         left_layout.addWidget(self.source_text)
 
         self.source_text_roman = QLabel()
@@ -148,14 +156,87 @@ class EditorScreen(QWidget):
         self.setLayout(main_layout)
         self.retranslate_ui()
 
+    def show_source_text_context_menu(self, position):
+        menu = self.source_text.createStandardContextMenu()
+        if menu is None:
+            return
+        menu.addSeparator()
+        translate_action = QAction(
+            self.config.tr("translate_selection"),
+            menu,
+        )
+        translate_action.triggered.connect(self.translate_selection)
+
+        
+        transliterate_action = QAction(
+            self.config.tr("transliterate_selection"),
+            menu,
+        )
+        transliterate_action.triggered.connect(self.transliterate_selection)
+
+        menu.addAction(translate_action)
+        menu.addAction(transliterate_action)
+        
+        menu.exec(self.source_text.mapToGlobal(position))
+
+    def translate_selection(self):
+        cursor = self.source_text.textCursor()
+        selected_text = cursor.selectedText()
+        client = TranslateClient(model=self.config.translate_model, **self.config.translate_api_config)
+        if selected_text:
+            src_lang = self.model.src_lang
+            tgt_lang = self.model.target_lang
+            if not tgt_lang:
+                QMessageBox.critical(
+                    self,
+                    self.config.tr("error"),
+                    self.config.tr("target_language_not_set"),
+                )
+                return
+            try:
+                translated_text = client.translate(
+                    selected_text, src_lang, tgt_lang
+                )
+                result_dialog = ResultDialog(
+                    result_text=translated_text,
+                    parent=self,
+                )
+                result_dialog.exec()
+
+            except Exception as e:
+                QMessageBox.critical(
+                    self,
+                    self.config.tr("error"),
+                    self.config.tr("translation_error", error=str(e)),
+                )
+
+    def transliterate_selection(self):
+        cursor = self.source_text.textCursor()
+        selected_text = cursor.selectedText()
+        if selected_text:
+            try:
+                transliterated_text = convert_to_latin(selected_text, self.model.src_lang)
+                result_dialog = ResultDialog(
+                    result_text=transliterated_text,
+                    parent=self,
+                )
+                result_dialog.exec()
+            except Exception as e:
+                QMessageBox.critical(
+                    self,
+                    self.config.tr("error"),
+                    self.config.tr("transliteration_error", error=str(e)),
+                )
+            
+
     def retranslate_ui(self):
         self.title.setText(self.config.tr("editor_title"))
         self.source_label.setText(self.config.tr("source_text"))
         self.translated_label.setText(self.config.tr("translated_text"))
-        self.prev_btn.setText(f"<- {self.config.tr('previous')}")
+        self.prev_btn.setText(f"⬅️ {self.config.tr('previous')}")
         self.auto_btn.setText(self.config.tr("auto_translate"))
         self.save_btn.setText(self.config.tr("save"))
-        self.next_btn.setText(f"{self.config.tr('next')} ->")
+        self.next_btn.setText(f"{self.config.tr('next')} ➡️")
         self.back_btn.setText(self.config.tr("back"))
 
     def set_latin_text(self, text: str, label: QLabel, lang: str | None = None):

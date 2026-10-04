@@ -3,8 +3,8 @@
 import logging
 from datetime import datetime
 import sys
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtGui import QIcon
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtGui import QIcon
 import ctypes
 import os
 from ui.main_window import MainWindow
@@ -29,7 +29,7 @@ def main():
     window = MainWindow(config=config)
     window.show()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
     # Handling app exit
     on_exit(config)

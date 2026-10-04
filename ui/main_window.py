@@ -1,14 +1,12 @@
 # ui/main_window.py
-
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QMainWindow,
     QStackedWidget,
-    QAction,
-    QActionGroup,
     QMessageBox,
     QMenuBar,
     QFileDialog,
 )
+from PyQt6.QtGui import QAction, QActionGroup
 
 from ui.upload_screen import UploadScreen
 from ui.list_screen import ListScreen
@@ -17,6 +15,7 @@ from ui.custom_widget import MetadataEditDialog
 from core.config import AppConfig
 from core.i18n import APP_LANGUAGES
 from core.theme import APP_THEMES
+from core.translator import SUPPORTED_TRANSLATION_MODELS
 from models.translation_model import TranslationModel
 
 
@@ -63,7 +62,7 @@ class MainWindow(QMainWindow):
         self.close()
 
     def create_menu(self):
-        menubar: QMenuBar = self.menuBar()
+        menubar = self.menuBar()
         if not menubar:
             return
         menubar.clear()
@@ -114,12 +113,12 @@ class MainWindow(QMainWindow):
         if not settings_menu:
             return
 
+        # Theme
         theme_menu = settings_menu.addMenu(self.config.tr("theme"))
         if not theme_menu:
             return
         theme_group = QActionGroup(self)
         theme_group.setExclusive(True)
-        #
         for theme in APP_THEMES:
             theme_action = QAction(self.config.tr(theme), self)
             theme_action.triggered.connect(
@@ -130,6 +129,7 @@ class MainWindow(QMainWindow):
             theme_group.addAction(theme_action)
             theme_menu.addAction(theme_action)
 
+        # Language
         language_menu = settings_menu.addMenu(self.config.tr("app_language"))
         if not language_menu:
             return
@@ -144,6 +144,22 @@ class MainWindow(QMainWindow):
             )
             language_group.addAction(language_action)
             language_menu.addAction(language_action)
+
+        # Translate
+        translate_menu = settings_menu.addMenu(self.config.tr("translate"))
+        if not translate_menu:
+            return
+        translate_group = QActionGroup(self)
+        translate_group.setExclusive(True)
+        for model in SUPPORTED_TRANSLATION_MODELS:
+            translate_action = QAction(self.config.tr(model), self)
+            translate_action.setCheckable(True)
+            translate_action.setChecked(model == self.config.translate_model)
+            translate_action.triggered.connect(
+                lambda checked=False, model=model: self.set_translate_model(model)
+            )
+            translate_group.addAction(translate_action)
+            translate_menu.addAction(translate_action)
 
         # ---------------------------
         # ❓ Help Menu
@@ -164,9 +180,9 @@ class MainWindow(QMainWindow):
         current_widget = self.stack.currentWidget()
         if current_widget == self.editor_screen or current_widget == self.list_screen:
             file_dialog = QFileDialog(self)
-            file_dialog.setAcceptMode(QFileDialog.AcceptSave)
+            file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
             file_dialog.setNameFilters(["PDF Files (*.pdf)", "Text Files (*.txt)"])
-            if file_dialog.exec_():
+            if file_dialog.exec():
                 file_path = file_dialog.selectedFiles()[0]
                 success, message = self.model.export_translations(file_path)
                 if success:
@@ -215,6 +231,11 @@ class MainWindow(QMainWindow):
         self.config.set("ui", "language", language)
         self.retranslate_ui()
 
+    def set_translate_model(self, model):
+        if model == self.config.translate_model:
+            return
+        self.config.set("language", "translate_model", model)
+
     def retranslate_ui(self):
         self.create_menu()
         self.upload_screen.retranslate_ui()
@@ -240,7 +261,7 @@ class MainWindow(QMainWindow):
             author_label=self.config.tr("project_author"),
             parent=self,
         )
-        if dlg.exec_():
+        if dlg.exec():
             new_title = dlg.project_title
             new_name = dlg.project_name
             new_author = dlg.project_author

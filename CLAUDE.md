@@ -1,6 +1,6 @@
 # CLAUDE Guidance for Anuvad
 
-This repository is a PyQt5 desktop translation workbench. Use this file as a guide to understand the architecture, follow the existing structure, and keep new Python code clean, Zen-aligned, and PEP-compliant.
+This repository is a PyQt6 desktop translation workbench. Use this file as a guide to understand the architecture, follow the existing structure, and keep new Python code clean, Zen-aligned, and PEP-compliant.
 
 ## Project Overview
 

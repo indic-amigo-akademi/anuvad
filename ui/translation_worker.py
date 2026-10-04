@@ -1,6 +1,6 @@
 # ui/translation_worker.py
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSignal
 
 from core.translator import TranslateClient
 

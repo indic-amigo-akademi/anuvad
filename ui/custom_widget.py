@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QWidget,
     QHBoxLayout,
     QFrame,
@@ -9,9 +9,11 @@ from PyQt5.QtWidgets import (
     QDialogButtonBox,
     QLineEdit,
     QFormLayout,
+    QPlainTextEdit,
+    QPushButton,
 )
-from PyQt5.QtCore import Qt
-
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QGuiApplication
 
 class DividerWidget(QWidget):
     def __init__(self, text="OR", parent=None):
@@ -20,12 +22,12 @@ class DividerWidget(QWidget):
         h = QHBoxLayout(self)
         left = QFrame()
         left.setObjectName("line")
-        left.setFrameShape(QFrame.HLine)
-        left.setFrameShadow(QFrame.Sunken)
+        left.setFrameShape(QFrame.Shape.HLine)
+        left.setFrameShadow(QFrame.Shadow.Sunken)
         right = QFrame()
         right.setObjectName("line")
-        right.setFrameShape(QFrame.HLine)
-        right.setFrameShadow(QFrame.Sunken)
+        right.setFrameShape(QFrame.Shape.HLine)
+        right.setFrameShadow(QFrame.Shadow.Sunken)
         self.label = QLabel(text)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setStyleSheet("padding: 0 8px;")
@@ -56,7 +58,7 @@ class ComboInputDialog(QDialog):
         layout.addWidget(self.combo)
 
         buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, parent=self
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, parent=self
         )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
@@ -99,7 +101,7 @@ class MetadataEditDialog(QDialog):
         layout.addLayout(form)
 
         buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, parent=self
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, parent=self
         )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
@@ -116,3 +118,38 @@ class MetadataEditDialog(QDialog):
     @property
     def project_author(self):
         return self.author_edit.text().strip()
+
+
+class ResultDialog(QDialog):
+    def __init__(self, result_text="", parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Result")
+        self.resize(500, 300)
+
+        self.text_box = QPlainTextEdit(self)
+        self.text_box.setPlainText(result_text)
+        self.text_box.setReadOnly(True)
+
+        self.copy_button = QPushButton("Copy")
+        self.copy_button.clicked.connect(self.copy_text)
+
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(self.accept)
+
+        buttons = QHBoxLayout()
+        buttons.addStretch()
+        buttons.addWidget(self.copy_button)
+        buttons.addWidget(close_button)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.text_box)
+        layout.addLayout(buttons)
+
+    def copy_text(self):
+        clipboard = QGuiApplication.clipboard()
+        if clipboard is None:
+            return
+        clipboard.setText(self.text_box.toPlainText())
+        self.copy_button.setText("Copied!")
+        # Restore the button label after a moment
+        QTimer.singleShot(1200, lambda: self.copy_button.setText("Copy"))

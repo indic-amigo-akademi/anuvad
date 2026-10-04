@@ -233,3 +233,4 @@ compile_commands.json
 .claude
 .graphify*
 graphify-out/
+.vscode

@@ -7,7 +7,9 @@ from deep_translator import (
     MicrosoftTranslator,
     LibreTranslator,
 )
+from googletrans import Translator
 from core.language import SUPPORTED_LANGUAGES
+import asyncio
 
 SUPPORTED_TRANSLATION_MODELS = [
     "google",
@@ -16,6 +18,7 @@ SUPPORTED_TRANSLATION_MODELS = [
     "pons",
     "microsoft",
     "libre",
+    "googletrans",
 ]
 
 
@@ -37,7 +40,12 @@ class TranslateClient:
             return ""
 
         translator = self.get_translator(source, target)
-        return translator.translate(text)
+        if self.model == "googletrans":
+            translated_text = asyncio.run(translator.translate(text, src=source, dest=target)).text
+        else:
+            translated_text = translator.translate(text)
+
+        return translated_text
 
     def get_translator(self, source: str, target: str):
         key = (source, target)
@@ -61,7 +69,10 @@ class TranslateClient:
                     source=source, target=target, **self.__kwargs
                 )
             elif self.model == "libre":
+                print(f"Using Libre Translator with source: {source}, target: {target}, kwargs: {self.__kwargs}")
                 self._translators[key] = LibreTranslator(source=source, target=target, **self.__kwargs)
+            elif self.model == "googletrans":
+                self._translators[key] = Translator(service_urls=["translate.googleapis.com"])
             else:
                 raise ValueError(f"Unsupported translation model: {self.model}")
         return self._translators[key]

@@ -61,14 +61,20 @@
     "text_segments": "पाठ खंड",
     "theme": "थीम",
     "translate": "अनुवाद",
+    "translate_selection": "चयनित पाठ अनुवाद करें",
     "translated_text": "अनूदित पाठ",
     "translating_current_item": "वर्तमान आइटम का अनुवाद हो रहा है...",
     "translating_item": "आइटम #{idx} का अनुवाद हो रहा है...",
     "translating_selected_items": "चयनित आइटम का अनुवाद हो रहा है...",
+    "translation_error": "अनुवाद त्रुटि: {error}",
     "translation": "अनुवाद",
     "translation_running": "अनुवाद चल रहा है",
     "translation_running_message": "वर्तमान अनुवाद पूरा होने तक प्रतीक्षा करें।",
     "translation_saved": "अनुवाद सहेजा गया",
     "translation_stopped": "अनुवाद रुका",
-    "translation_was_cancelled": "अनुवाद रद्द कर दिया गया।"
+    "translation_was_cancelled": "अनुवाद रद्द कर दिया गया।",
+    "transliterate": "लिप्यन्तरण",
+    "transliterate_selection": "चयनित पाठ लिप्यन्तरण करें",
+    "transliterated_text": "लिप्यन्तरित पाठ",
+    "transliteration_error": "लिप्यन्तरण त्रुटि: {error}"
 }

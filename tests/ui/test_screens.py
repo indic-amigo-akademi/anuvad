@@ -1,6 +1,6 @@
 """Integration tests for the main PyQt screens."""
 
-from PyQt5.QtCore import Qt
+from PyQt6.QtCore import Qt
 
 from core.file_handler import write_abd_file
 from ui.editor_screen import EditorScreen

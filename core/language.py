@@ -1,7 +1,8 @@
 # core/language.py
 import unicodedata
 import logging
-
+import asyncio
+from googletrans import Translator
 from indic_transliteration import sanscript
 from indic_transliteration.sanscript import transliterate
 from deep_translator import single_detection
@@ -61,6 +62,12 @@ def detect_language(text: str, lang_detect_api_key: str | None = None) -> str:
     """
     if not text:
         return "unknown"
+
+    try:
+        translate = Translator(service_urls=["translate.googleapis.com"])
+        return asyncio.run(translate.detect(text)).lang
+    except Exception as e:
+        logger.error(f"Error in detecting lang using googletrans: {e}")
 
     if lang_detect_api_key:
         try:

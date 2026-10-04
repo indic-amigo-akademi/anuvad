@@ -1,14 +1,12 @@
 # ui/main_window.py
-
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QMainWindow,
     QStackedWidget,
-    QAction,
-    QActionGroup,
     QMessageBox,
     QMenuBar,
     QFileDialog,
 )
+from PyQt6.QtGui import QAction, QActionGroup
 
 from ui.upload_screen import UploadScreen
 from ui.list_screen import ListScreen
@@ -64,7 +62,7 @@ class MainWindow(QMainWindow):
         self.close()
 
     def create_menu(self):
-        menubar: QMenuBar = self.menuBar()
+        menubar = self.menuBar()
         if not menubar:
             return
         menubar.clear()
@@ -182,9 +180,9 @@ class MainWindow(QMainWindow):
         current_widget = self.stack.currentWidget()
         if current_widget == self.editor_screen or current_widget == self.list_screen:
             file_dialog = QFileDialog(self)
-            file_dialog.setAcceptMode(QFileDialog.AcceptSave)
+            file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
             file_dialog.setNameFilters(["PDF Files (*.pdf)", "Text Files (*.txt)"])
-            if file_dialog.exec_():
+            if file_dialog.exec():
                 file_path = file_dialog.selectedFiles()[0]
                 success, message = self.model.export_translations(file_path)
                 if success:
@@ -263,7 +261,7 @@ class MainWindow(QMainWindow):
             author_label=self.config.tr("project_author"),
             parent=self,
         )
-        if dlg.exec_():
+        if dlg.exec():
             new_title = dlg.project_title
             new_name = dlg.project_name
             new_author = dlg.project_author

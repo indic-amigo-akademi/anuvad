@@ -3,7 +3,7 @@
 import configparser
 import os
 import shutil
-from PyQt5.QtGui import QIcon
+from PyQt6.QtGui import QIcon
 from core.file_handler import load_qss, resource_path, user_data_path
 from core.i18n import translate
 

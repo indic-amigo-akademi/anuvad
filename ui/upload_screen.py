@@ -2,7 +2,7 @@
 
 import os
 
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QPushButton,
@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QDialog,
 )
-from PyQt5.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 from ui.custom_widget import DividerWidget, ComboInputDialog
 
 from core.parser import parse_raw_text
@@ -164,7 +164,7 @@ class UploadScreen(QWidget):
                     for tgt_lang in target_langs
                 ],
             )
-            if dlg.exec_() == QDialog.Accepted:
+            if dlg.exec() == QDialog.DialogCode.Accepted:
                 tgt_lang = dlg.selectedData()
                 self.model.set_target_lang(
                     tgt_lang, data_dir=self.data_dir

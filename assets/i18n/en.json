@@ -61,14 +61,20 @@
     "text_segments": "Text Segments",
     "theme": "Theme",
     "translate": "Translate",
+    "translate_selection": "Translate Selection",
     "translated_text": "Translated Text",
     "translating_current_item": "Translating current item...",
     "translating_item": "Translating item #{idx}...",
     "translating_selected_items": "Translating selected items...",
+    "translation_error": "Translation Error: {error}",
     "translation": "Translation",
     "translation_running": "Translation Running",
     "translation_running_message": "Please wait for the current translation to finish.",
     "translation_saved": "Translation saved",
     "translation_stopped": "Translation Stopped",
-    "translation_was_cancelled": "Translation was cancelled."
+    "translation_was_cancelled": "Translation was cancelled.",
+    "transliterate": "Transliterate",
+    "transliterate_selection": "Transliterate Selection",
+    "transliterated_text": "Transliterated Text",
+    "transliteration_error": "Transliteration Error: {error}"
 }

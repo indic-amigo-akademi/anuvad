@@ -61,14 +61,20 @@
     "text_segments": "পাঠ্য অংশ",
     "theme": "থিম",
     "translate": "অনুবাদ",
+    "translate_selection": "নির্বাচিত অনুবাদ",
     "translated_text": "অনূদিত পাঠ্য",
     "translating_current_item": "বর্তমান আইটেম অনুবাদ হচ্ছে...",
     "translating_item": "আইটেম #{idx} অনুবাদ হচ্ছে...",
     "translating_selected_items": "নির্বাচিত আইটেম অনুবাদ হচ্ছে...",
+    "translation_error": "অনুবাদে সমস্যা হয়েছে: {error}",
     "translation": "অনুবাদ",
     "translation_running": "অনুবাদ চলছে",
     "translation_running_message": "বর্তমান অনুবাদ শেষ হওয়া পর্যন্ত অপেক্ষা করুন।",
     "translation_saved": "অনুবাদ সংরক্ষিত হয়েছে",
     "translation_stopped": "অনুবাদ বন্ধ হয়েছে",
-    "translation_was_cancelled": "অনুবাদ বাতিল করা হয়েছে।"
+    "translation_was_cancelled": "অনুবাদ বাতিল করা হয়েছে।",
+    "transliterate": "প্রতিবর্ণীকরণ",
+    "transliterate_selection": "নির্বাচিত প্রতিবর্ণীকরণ",
+    "transliterated_text": "প্রতিবর্ণীকৃত পাঠ্য",
+    "transliteration_error": "প্রতিবর্ণীকরণ সমস্যা: {error}"
 }

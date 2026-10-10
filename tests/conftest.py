@@ -26,11 +26,11 @@ class SimpleQtBot:
         widget.show()
         self.app.processEvents()
 
-    def mouseClick(self, widget: QWidget, button: Qt.MouseButton = Qt.LeftButton):
+    def mouseClick(self, widget: QWidget, button: Qt.MouseButton = Qt.MouseButton.LeftButton):
         QTest.mouseClick(widget, button)
         self.app.processEvents()
 
-    def mouseDClick(self, widget: QWidget, button: Qt.MouseButton = Qt.LeftButton):
+    def mouseDClick(self, widget: QWidget, button: Qt.MouseButton = Qt.MouseButton.LeftButton):
         QTest.mouseDClick(widget, button)
         self.app.processEvents()
 

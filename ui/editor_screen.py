@@ -25,7 +25,7 @@ class EditorScreen(QWidget):
     back_to_list = pyqtSignal()
 
     def __init__(self, model, config: AppConfig):
-        
+
         super().__init__()
         self.model = model
         self.config = config
@@ -118,15 +118,11 @@ class EditorScreen(QWidget):
 
         self.auto_btn = QPushButton()
         self.auto_btn.setObjectName("primary")
-        self.auto_btn.setIcon(
-            config.get_icon("translate")
-        )
+        self.auto_btn.setIcon(config.get_icon("translate"))
         self.auto_btn.clicked.connect(self.auto_translate)
 
         self.save_btn = QPushButton()
-        self.save_btn.setIcon(
-            config.get_icon("save")
-        )
+        self.save_btn.setIcon(config.get_icon("save"))
         self.save_btn.setObjectName("accent")
         self.save_btn.clicked.connect(lambda: self.save_translation(True))
 
@@ -167,7 +163,6 @@ class EditorScreen(QWidget):
         )
         translate_action.triggered.connect(self.translate_selection)
 
-        
         transliterate_action = QAction(
             self.config.tr("transliterate_selection"),
             menu,
@@ -176,13 +171,15 @@ class EditorScreen(QWidget):
 
         menu.addAction(translate_action)
         menu.addAction(transliterate_action)
-        
+
         menu.exec(self.source_text.mapToGlobal(position))
 
     def translate_selection(self):
         cursor = self.source_text.textCursor()
         selected_text = cursor.selectedText()
-        client = TranslateClient(model=self.config.translate_model, **self.config.translate_api_config)
+        client = TranslateClient(
+            model=self.config.translate_model, **self.config.translate_api_config
+        )
         if selected_text:
             src_lang = self.model.src_lang
             tgt_lang = self.model.target_lang
@@ -194,9 +191,7 @@ class EditorScreen(QWidget):
                 )
                 return
             try:
-                translated_text = client.translate(
-                    selected_text, src_lang, tgt_lang
-                )
+                translated_text = client.translate(selected_text, src_lang, tgt_lang)
                 result_dialog = ResultDialog(
                     result_text=translated_text,
                     parent=self,
@@ -215,7 +210,9 @@ class EditorScreen(QWidget):
         selected_text = cursor.selectedText()
         if selected_text:
             try:
-                transliterated_text = convert_to_latin(selected_text, self.model.src_lang)
+                transliterated_text = convert_to_latin(
+                    selected_text, self.model.src_lang
+                )
                 result_dialog = ResultDialog(
                     result_text=transliterated_text,
                     parent=self,
@@ -227,7 +224,6 @@ class EditorScreen(QWidget):
                     self.config.tr("error"),
                     self.config.tr("transliteration_error", error=str(e)),
                 )
-            
 
     def retranslate_ui(self):
         self.title.setText(self.config.tr("editor_title"))

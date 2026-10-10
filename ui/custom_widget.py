@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QGuiApplication
 
+
 class DividerWidget(QWidget):
     def __init__(self, text="OR", parent=None):
         super().__init__(parent)
@@ -58,7 +59,8 @@ class ComboInputDialog(QDialog):
         layout.addWidget(self.combo)
 
         buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, parent=self
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
+            parent=self,
         )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
@@ -101,7 +103,8 @@ class MetadataEditDialog(QDialog):
         layout.addLayout(form)
 
         buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, parent=self
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
+            parent=self,
         )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)

@@ -27,7 +27,7 @@ def test_upload_screen_opens_existing_project(qtbot, app_config, translation_mod
     screen.file_processed.connect(lambda: emitted.append(True))
 
     screen.project_list.setCurrentRow(0)
-    qtbot.mouseClick(screen.open_btn, Qt.LeftButton)
+    qtbot.mouseClick(screen.open_btn, Qt.MouseButton.LeftButton)
 
     assert emitted == [True]
     assert translation_model.base_filename == "book"
@@ -48,7 +48,7 @@ def test_list_screen_filters_and_clears_rows(qtbot, app_config, loaded_model):
     assert screen.filter_model.rowCount() == 1
     assert screen.filter_model.index(0, 1).data() == "World"
 
-    qtbot.mouseClick(screen.clear_search_btn, Qt.LeftButton)
+    qtbot.mouseClick(screen.clear_search_btn, Qt.MouseButton.LeftButton)
 
     assert screen.search_input.text() == ""
     assert screen.filter_model.rowCount() == 3
@@ -64,7 +64,7 @@ def test_editor_screen_saves_dirty_translation_on_navigation(
     screen.load_current()
 
     qtbot.keyClicks(screen.translated_text, "Nomoskar")
-    qtbot.mouseClick(screen.next_btn, Qt.LeftButton)
+    qtbot.mouseClick(screen.next_btn, Qt.MouseButton.LeftButton)
 
     assert loaded_model.current_index == 1
     assert loaded_model.translations[1] == "Nomoskar"

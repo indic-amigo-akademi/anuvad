@@ -1,6 +1,6 @@
 # ui/list_screen.py
 
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QProgressDialog,
 )
-from PyQt5.QtCore import (
+from PyQt6.QtCore import (
     pyqtSignal,
     Qt,
     QThread,
@@ -22,7 +22,7 @@ from PyQt5.QtCore import (
     QAbstractTableModel,
     QSortFilterProxyModel,
 )
-from PyQt5.QtGui import QColor
+from PyQt6.QtGui import QColor
 
 from models.translation_model import TranslationModel
 from core.config import AppConfig
@@ -211,8 +211,8 @@ class ListScreen(QWidget):
         horizontalHeader = self.table.horizontalHeader()
         if horizontalHeader is not None:
             horizontalHeader.setStretchLastSection(True)
-        self.table.setSelectionBehavior(self.table.SelectRows)
-        self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.table.setSelectionBehavior(self.table.SelectionBehavior.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table.doubleClicked.connect(self.handle_double_click)
         self.table.customContextMenuRequested.connect(self.show_context_menu)
@@ -397,7 +397,7 @@ class ListScreen(QWidget):
 
         viewport = self.table.viewport()
         if viewport is not None:
-            action = menu.exec_(viewport.mapToGlobal(position))
+            action = menu.exec(viewport.mapToGlobal(position))
 
         if action == clean_action:
             self.clean_selected_translations()

@@ -1,14 +1,11 @@
 # ui/main_window.py
-
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QMainWindow,
     QStackedWidget,
-    QAction,
-    QActionGroup,
     QMessageBox,
-    QMenuBar,
     QFileDialog,
 )
+from PyQt6.QtGui import QAction, QActionGroup
 
 from ui.upload_screen import UploadScreen
 from ui.list_screen import ListScreen
@@ -17,6 +14,7 @@ from ui.custom_widget import MetadataEditDialog
 from core.config import AppConfig
 from core.i18n import APP_LANGUAGES
 from core.theme import APP_THEMES
+from core.translator import SUPPORTED_TRANSLATION_MODELS
 from models.translation_model import TranslationModel
 
 
@@ -63,98 +61,97 @@ class MainWindow(QMainWindow):
         self.close()
 
     def create_menu(self):
-        menubar: QMenuBar = self.menuBar()
+        menubar = self.menuBar()
         if not menubar:
             return
-        menubar.clear()
 
-        # ---------------------------
-        # 📁 File Menu
-        # ---------------------------
+        menubar.clear()
+        self._create_file_menu(menubar)
+        self._create_settings_menu(menubar)
+        self._create_help_menu(menubar)
+
+    def _create_file_menu(self, menubar):
         file_menu = menubar.addMenu(self.config.tr("file"))
         if not file_menu:
             return
 
-        new_action = QAction(self.config.tr("new_project"), file_menu)
-        new_action.setShortcut("Ctrl+N")
-        new_action.triggered.connect(self.go_to_upload)
+        actions = [
+            ("new_project", "Ctrl+N", self.go_to_upload),
+            ("open_project", "Ctrl+O", self.go_to_upload),
+            ("export", None, self.export_project),
+            ("save", "Ctrl+S", self.save_current),
+            ("edit_metadata", None, self.edit_metadata),
+            ("exit", "Ctrl+Q", self.close_window),
+        ]
 
-        open_action = QAction(self.config.tr("open_project"), self)
-        open_action.setShortcut("Ctrl+O")
-        open_action.triggered.connect(self.go_to_upload)
+        for index, (key, shortcut, callback) in enumerate(actions):
+            if index in (2, 4, 5):
+                file_menu.addSeparator()
 
-        export_action = QAction(self.config.tr("export"), self)
-        export_action.triggered.connect(self.export_project)
+            action = QAction(self.config.tr(key), file_menu)
+            if shortcut:
+                action.setShortcut(shortcut)
+            action.triggered.connect(callback)
+            file_menu.addAction(action)
 
-        save_action = QAction(self.config.tr("save"), self)
-        save_action.setShortcut("Ctrl+S")
-        save_action.triggered.connect(self.save_current)
-
-        metadata_action = QAction(self.config.tr("edit_metadata"), self)
-        metadata_action.triggered.connect(self.edit_metadata)
-
-        exit_action = QAction(self.config.tr("exit"), self)
-        exit_action.setShortcut("Ctrl+Q")
-        exit_action.triggered.connect(self.close_window)
-
-        file_menu.addAction(new_action)
-        file_menu.addAction(open_action)
-        file_menu.addSeparator()
-        file_menu.addAction(save_action)
-        file_menu.addAction(export_action)
-        file_menu.addSeparator()
-        file_menu.addAction(metadata_action)
-        file_menu.addSeparator()
-        file_menu.addAction(exit_action)
-
-        # ---------------------------
-        # ⚙️ Settings Menu
-        # ---------------------------
+    def _create_settings_menu(self, menubar):
         settings_menu = menubar.addMenu(self.config.tr("settings"))
         if not settings_menu:
             return
 
-        theme_menu = settings_menu.addMenu(self.config.tr("theme"))
-        if not theme_menu:
-            return
-        theme_group = QActionGroup(self)
-        theme_group.setExclusive(True)
-        #
-        for theme in APP_THEMES:
-            theme_action = QAction(self.config.tr(theme), self)
-            theme_action.triggered.connect(
-                lambda checked=False, t=theme: self.set_app_theme(t)
-            )
-            theme_action.setCheckable(True)
-            theme_action.setChecked(self.config.theme == theme)
-            theme_group.addAction(theme_action)
-            theme_menu.addAction(theme_action)
+        self._add_choice_menu(
+            settings_menu, "theme", APP_THEMES, self.config.theme, self.set_app_theme
+        )
+        self._add_choice_menu(
+            settings_menu,
+            "app_language",
+            APP_LANGUAGES.items(),
+            self.config.ui_language,
+            self.set_app_language,
+            use_labels=True,
+        )
+        self._add_choice_menu(
+            settings_menu,
+            "translate",
+            SUPPORTED_TRANSLATION_MODELS,
+            self.config.translate_model,
+            self.set_translate_model,
+        )
 
-        language_menu = settings_menu.addMenu(self.config.tr("app_language"))
-        if not language_menu:
+    def _add_choice_menu(
+        self,
+        parent_menu,
+        title_key,
+        choices,
+        current_value,
+        callback,
+        use_labels=False,
+    ):
+        menu = parent_menu.addMenu(self.config.tr(title_key))
+        if not menu:
             return
-        language_group = QActionGroup(self)
-        language_group.setExclusive(True)
-        for code, label in APP_LANGUAGES.items():
-            language_action = QAction(label, self)
-            language_action.setCheckable(True)
-            language_action.setChecked(code == self.config.ui_language)
-            language_action.triggered.connect(
-                lambda checked=False, language=code: self.set_app_language(language)
-            )
-            language_group.addAction(language_action)
-            language_menu.addAction(language_action)
 
-        # ---------------------------
-        # ❓ Help Menu
-        # ---------------------------
+        group = QActionGroup(self)
+        group.setExclusive(True)
+
+        items = choices if use_labels else ((value, value) for value in choices)
+        for value, label in items:
+            action = QAction(label if use_labels else self.config.tr(label), self)
+            action.setCheckable(True)
+            action.setChecked(value == current_value)
+            action.triggered.connect(
+                lambda checked=False, selected=value: callback(selected)
+            )
+            group.addAction(action)
+            menu.addAction(action)
+
+    def _create_help_menu(self, menubar):
         help_menu = menubar.addMenu(self.config.tr("help"))
         if not help_menu:
             return
 
         about_action = QAction(self.config.tr("about"), self)
         about_action.triggered.connect(self.show_about)
-
         help_menu.addAction(about_action)
 
     def go_to_upload(self):
@@ -164,9 +161,9 @@ class MainWindow(QMainWindow):
         current_widget = self.stack.currentWidget()
         if current_widget == self.editor_screen or current_widget == self.list_screen:
             file_dialog = QFileDialog(self)
-            file_dialog.setAcceptMode(QFileDialog.AcceptSave)
+            file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
             file_dialog.setNameFilters(["PDF Files (*.pdf)", "Text Files (*.txt)"])
-            if file_dialog.exec_():
+            if file_dialog.exec():
                 file_path = file_dialog.selectedFiles()[0]
                 success, message = self.model.export_translations(file_path)
                 if success:
@@ -215,6 +212,11 @@ class MainWindow(QMainWindow):
         self.config.set("ui", "language", language)
         self.retranslate_ui()
 
+    def set_translate_model(self, model):
+        if model == self.config.translate_model:
+            return
+        self.config.set("language", "translate_model", model)
+
     def retranslate_ui(self):
         self.create_menu()
         self.upload_screen.retranslate_ui()
@@ -240,7 +242,7 @@ class MainWindow(QMainWindow):
             author_label=self.config.tr("project_author"),
             parent=self,
         )
-        if dlg.exec_():
+        if dlg.exec():
             new_title = dlg.project_title
             new_name = dlg.project_name
             new_author = dlg.project_author

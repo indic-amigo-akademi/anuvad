@@ -1,7 +1,8 @@
 # core/language.py
 import unicodedata
 import logging
-
+import asyncio
+from googletrans import Translator
 from indic_transliteration import sanscript
 from indic_transliteration.sanscript import transliterate
 from deep_translator import single_detection
@@ -53,21 +54,29 @@ def get_indic_script_name(lang: str) -> str:
     return script
 
 
-def detect_language(text: str, lang_detect_api_key: str | None = None) -> str:
-    """
-    Detects language code from text using native Unicode script identification.
-    This is a lightweight alternative to langdetect that works well for
-    distinguishing Indic scripts and Latin text.
-    """
-    if not text:
-        return "unknown"
+def _detect_with_googletrans(text: str) -> str | None:
+    try:
+        translator = Translator(service_urls=["translate.googleapis.com"])
+        res = asyncio.run(translator.detect(text))
+        print(f"Googletrans detection result: {res.lang} with confidence {res.confidence} for '{text}'")
+        return res.lang
+    except Exception as e:
+        logger.error(f"Error in detecting lang using googletrans: {e}")
+        return None
 
-    if lang_detect_api_key:
-        try:
-            return single_detection(text[:1000], api_key=lang_detect_api_key) or "unknown"
-        except Exception as e:
-            logger.error(f"Error in detecting lang: {e}")
 
+def _detect_with_api(text: str, api_key: str | None) -> str | None:
+    if not api_key:
+        return None
+
+    try:
+        return single_detection(text[:1000], api_key=api_key) or None
+    except Exception as e:
+        logger.error(f"Error in detecting lang: {e}")
+        return None
+
+
+def _detect_from_script(text: str) -> str:
     script_map = {
         "LATIN": "en",
         "DEVANAGARI": "hi",
@@ -82,22 +91,33 @@ def detect_language(text: str, lang_detect_api_key: str | None = None) -> str:
     }
 
     counts: dict[str, int] = {}
-    # Analyze up to 1000 characters for efficiency
     for char in text[:1000]:
-        if char.isalpha():
-            try:
-                # unicodedata.name returns strings like "DEVANAGARI LETTER A"
-                script = unicodedata.name(char).split(" ")[0]
-                counts[script] = counts.get(script, 0) + 1
-            except (ValueError, IndexError):
-                continue
+        if not char.isalpha():
+            continue
+        try:
+            script = unicodedata.name(char).split(" ")[0]
+        except (ValueError, IndexError):
+            continue
+        counts[script] = counts.get(script, 0) + 1
 
     if not counts:
         return "unknown"
 
-    # Return the language code associated with the most frequent script
     predominant_script = max(counts, key=lambda script: counts[script])
     return script_map.get(predominant_script, "unknown")
+
+
+def detect_language(text: str, lang_detect_api_key: str | None = None) -> str:
+    """Detect language using translation service, optional API, then Unicode script."""
+    if not text:
+        return "unknown"
+
+    return (
+        # _detect_with_googletrans(text)
+        # or 
+        _detect_with_api(text, lang_detect_api_key)
+        or _detect_from_script(text)
+    )
 
 
 def is_latin(text: str) -> bool:
@@ -108,7 +128,9 @@ def is_indic(lang: str) -> bool:
     return lang in SUPPORTED_INDIC_LANG
 
 
-def convert_to_latin(text: str, lang: str | None = None, lang_detect_api_key: str | None = None) -> str:
+def convert_to_latin(
+    text: str, lang: str | None = None, lang_detect_api_key: str | None = None
+) -> str:
     """
     Convert to latin variant if it's an Indic language. This is useful for better translation quality with models like mBART.
     """

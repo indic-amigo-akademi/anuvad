@@ -4,7 +4,7 @@
 <img width="200" src="assets/images/logo.png" alt="Anuvad" />
 </div>
 
-**Anuvad** is a PyQt5 desktop application for structured text translation workflows. It breaks large text files into numbered segments, supports manual and automatic translation, tracks progress, and stores work in a reusable project format.
+**Anuvad** is a PyQt6 desktop application for structured text translation workflows. It breaks large text files into numbered segments, supports manual and automatic translation, tracks progress, and stores work in a reusable project format.
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
@@ -232,7 +232,6 @@ translations, QSS, and `app.cfg`. Development tools and tests live in
 
 ```powershell
 pip install -r requirements.txt
-pip install -r requirements-dev.txt
 .\scripts\build.ps1
 .\scripts\size-report.ps1
 ```

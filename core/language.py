@@ -56,9 +56,16 @@ def get_indic_script_name(lang: str) -> str:
 
 def _detect_with_googletrans(text: str) -> str | None:
     try:
-        translator = Translator(service_urls=["translate.googleapis.com"])
+        translator = Translator(
+            service_urls=[
+                "translate.google.com",
+                "translate.google.co.in",
+            ],
+        )
         res = asyncio.run(translator.detect(text))
-        print(f"Googletrans detection result: {res.lang} with confidence {res.confidence} for '{text}'")
+        print(
+            f"Googletrans detection result: {res.lang} with confidence {res.confidence} for '{text}'"
+        )
         return res.lang
     except Exception as e:
         logger.error(f"Error in detecting lang using googletrans: {e}")
@@ -114,7 +121,7 @@ def detect_language(text: str, lang_detect_api_key: str | None = None) -> str:
 
     return (
         # _detect_with_googletrans(text)
-        # or 
+        # or
         _detect_with_api(text, lang_detect_api_key)
         or _detect_from_script(text)
     )

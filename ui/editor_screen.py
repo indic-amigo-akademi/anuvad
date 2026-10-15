@@ -10,8 +10,9 @@ from PyQt6.QtWidgets import (
     QSplitter,
     QMessageBox,
     QProgressDialog,
+    QScrollArea
 )
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QKeySequence, QShortcut
 from PyQt6.QtCore import pyqtSignal, Qt, QThread, QTimer
 
 from core.config import AppConfig
@@ -49,7 +50,13 @@ class EditorScreen(QWidget):
         # Header
         self.title = QLabel()
         self.title.setObjectName("title")
-        main_layout.addWidget(self.title)
+        self.progress_label = QLabel()
+        self.progress_label.setObjectName("progress")
+        header_layout = QHBoxLayout()
+        header_layout.addWidget(self.title)
+        header_layout.addStretch()
+        header_layout.addWidget(self.progress_label)
+        main_layout.addLayout(header_layout)
 
         # Splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -60,6 +67,7 @@ class EditorScreen(QWidget):
         left_layout.setSpacing(5)
 
         self.source_label = QLabel()
+        self.source_label.setObjectName("head")
         left_layout.addWidget(self.source_label)
 
         self.source_text = QTextEdit()
@@ -72,7 +80,10 @@ class EditorScreen(QWidget):
 
         self.source_text_roman = QLabel()
         self.source_text_roman.setWordWrap(True)
-        self.source_text_roman.setFixedHeight(200)
+        source_text_roman_scroll = QScrollArea()
+        source_text_roman_scroll.setFixedHeight(50)
+        source_text_roman_scroll.setWidgetResizable(True)
+        source_text_roman_scroll.setWidget(self.source_text_roman)
         left_layout.addWidget(self.source_text_roman)
         self.set_latin_text(self.source_text.toPlainText(), self.source_text_roman)
 
@@ -84,6 +95,7 @@ class EditorScreen(QWidget):
         right_layout.setSpacing(5)
 
         self.translated_label = QLabel()
+        self.translated_label.setObjectName("head")
         right_layout.addWidget(self.translated_label)
 
         self.translated_text = QTextEdit()
@@ -91,7 +103,11 @@ class EditorScreen(QWidget):
 
         self.translated_text_roman = QLabel()
         self.translated_text_roman.setWordWrap(True)
-        self.translated_text_roman.setFixedHeight(200)
+        # scrollable area for the romanized text
+        translated_text_roman_scroll = QScrollArea()
+        translated_text_roman_scroll.setFixedHeight(50)
+        translated_text_roman_scroll.setWidgetResizable(True)
+        translated_text_roman_scroll.setWidget(self.translated_text_roman)
         right_layout.addWidget(self.translated_text_roman)
         self.set_latin_text(
             self.translated_text.toPlainText(),
@@ -115,6 +131,8 @@ class EditorScreen(QWidget):
 
         self.prev_btn = QPushButton()
         self.prev_btn.clicked.connect(self.go_previous)
+        self.prev_btn_shortcut = QShortcut(QKeySequence("Ctrl+Alt+Left"), self)
+        self.prev_btn_shortcut.activated.connect(self.go_previous)
 
         self.auto_btn = QPushButton()
         self.auto_btn.setObjectName("primary")
@@ -128,9 +146,14 @@ class EditorScreen(QWidget):
 
         self.next_btn = QPushButton()
         self.next_btn.clicked.connect(self.go_next)
+        self.next_btn_shortcut = QShortcut(QKeySequence("Ctrl+Alt+Right"), self)
+        self.next_btn_shortcut.activated.connect(self.go_next)
 
         self.back_btn = QPushButton()
+        # self.back_btn.setIcon(config.get_icon("back"))
         self.back_btn.clicked.connect(self.go_back)
+        self.back_btn_shortcut = QShortcut(QKeySequence("Ctrl+Alt+Backspace"), self)
+        self.back_btn_shortcut.activated.connect(self.go_back)
 
         self.translated_text.textChanged.connect(self.handle_translation_text_changed)
         self.source_text.textChanged.connect(
@@ -250,6 +273,7 @@ class EditorScreen(QWidget):
         self.translated_text.setText(self.model.get_current_translation())
         self.current_translation_dirty = False
         self.loading_current = False
+        self.show_progress()
 
     def handle_translation_text_changed(self):
         self.translation_latin_update_timer.start()
@@ -422,3 +446,11 @@ class EditorScreen(QWidget):
     def go_back(self):
         self.save_if_dirty(save_to_file=False)
         self.back_to_list.emit()
+
+    
+    def show_progress(self):
+        percent = self.model.completion_percentage()
+        total = self.model.total_items()
+        done = self.model.translated_count()
+
+        self.progress_label.setText(f"{percent:.1f}% ({done}/{total})")

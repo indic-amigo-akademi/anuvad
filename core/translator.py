@@ -9,6 +9,7 @@ from deep_translator import (
 )
 from googletrans import Translator
 from core.language import SUPPORTED_LANGUAGES
+from fake_useragent import UserAgent
 import asyncio
 
 SUPPORTED_TRANSLATION_MODELS = [
@@ -41,7 +42,10 @@ class TranslateClient:
 
         translator = self.get_translator(source, target)
         if self.model == "googletrans":
-            translated_text = asyncio.run(translator.translate(text, src=source, dest=target)).text
+            # print(f"Using Googletrans with source: {source}, target: {target}")
+            translated_text = asyncio.run(
+                translator.translate(text, src=source, dest=target)
+            ).text
         else:
             translated_text = translator.translate(text)
 
@@ -49,6 +53,7 @@ class TranslateClient:
 
     def get_translator(self, source: str, target: str):
         key = (source, target)
+        ua = UserAgent()
         if key not in self._translators:
             if self.model == "google":
                 self._translators[key] = GoogleTranslator(source=source, target=target)
@@ -69,10 +74,20 @@ class TranslateClient:
                     source=source, target=target, **self.__kwargs
                 )
             elif self.model == "libre":
-                print(f"Using Libre Translator with source: {source}, target: {target}, kwargs: {self.__kwargs}")
-                self._translators[key] = LibreTranslator(source=source, target=target, **self.__kwargs)
+                print(
+                    f"Using Libre Translator with source: {source}, target: {target}, kwargs: {self.__kwargs}"
+                )
+                self._translators[key] = LibreTranslator(
+                    source=source, target=target, **self.__kwargs
+                )
             elif self.model == "googletrans":
-                self._translators[key] = Translator(service_urls=["translate.googleapis.com"])
+                self._translators[key] = Translator(
+                    service_urls=[
+                        "translate.google.com",
+                        "translate.google.co.in",
+                    ],
+                    user_agent=ua.random,
+                )
             else:
                 raise ValueError(f"Unsupported translation model: {self.model}")
         return self._translators[key]
